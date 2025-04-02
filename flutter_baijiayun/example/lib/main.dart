@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_baijiayun/flutter_baijiayun.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  BaijiayunApi.setPrivateDomainPrefix('e33180987');
+
   runApp(const MyApp());
 }
 
@@ -33,8 +36,8 @@ class _HomePageState extends State<HomePage> {
     });
     controller.initialize();
     controller.setOnlineVideo(
-      id: '160491264',
-      token: 'Vaac3j5n5hdjXPso7IvWENxo6c4wA6poVNb7GL8FoVwnHPIguunSCjG5JtrxIFp-',
+      id: '300640151',
+      token: '1HESMHR94-7FbckRSbAqZyYRZOjsF88q1yJXKdiXZWDAUE3NDhIV_TG5JtrxIFp-',
     );
     controller.play();
   }

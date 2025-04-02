@@ -731,3 +731,31 @@ withIdentifier: pigeonIdentifierArg)
     }
   }
 }
+/// Generated protocol from Pigeon that represents a handler of messages from Flutter.
+protocol BaijiayunApi {
+  func setPrivateDomainPrefix(prefix: String) throws
+}
+
+/// Generated setup class from Pigeon to handle messages through the `binaryMessenger`.
+class BaijiayunApiSetup {
+  static var codec: FlutterStandardMessageCodec { BaijiayunPigeonCodec.shared }
+  /// Sets up an instance of `BaijiayunApi` to handle messages through the `binaryMessenger`.
+  static func setUp(binaryMessenger: FlutterBinaryMessenger, api: BaijiayunApi?, messageChannelSuffix: String = "") {
+    let channelSuffix = messageChannelSuffix.count > 0 ? ".\(messageChannelSuffix)" : ""
+    let setPrivateDomainPrefixChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flutter_baijiayun_ios.BaijiayunApi.setPrivateDomainPrefix\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      setPrivateDomainPrefixChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let prefixArg = args[0] as! String
+        do {
+          try api.setPrivateDomainPrefix(prefix: prefixArg)
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      setPrivateDomainPrefixChannel.setMessageHandler(nil)
+    }
+  }
+}

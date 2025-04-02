@@ -16,3 +16,8 @@ abstract class VideoPlayer {
   void setPlaybackSpeed(double speed);
   void setBackgroundPlay(bool backgroundPlay);
 }
+
+@HostApi()
+abstract class BaijiayunApi {
+  void setPrivateDomainPrefix(String prefix);
+}
