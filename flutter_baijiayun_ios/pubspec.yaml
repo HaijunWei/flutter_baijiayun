@@ -1,0 +1,28 @@
+name: flutter_baijiayun_ios
+description: "A new Flutter plugin project."
+version: 0.0.1
+homepage:
+publish_to: none
+
+environment:
+  sdk: ^3.0.0
+  flutter: '>=3.3.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_baijiayun_platform_interface:
+    path: ../flutter_baijiayun_platform_interface
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+  pigeon: 
+
+flutter:
+  plugin:
+    platforms:
+      ios:
+        pluginClass: FlutterBaijiayunPlugin
+        dartPluginClass: VideoPlayerIOSPlatform
