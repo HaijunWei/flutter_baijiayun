@@ -83,7 +83,7 @@ class FlutterViewFactory: NSObject, FlutterPlatformViewFactory {
     }
 }
 
-public class FlutterBaijiayunPlugin: NSObject, FlutterPlugin {
+public class FlutterBaijiayunPlugin: NSObject, FlutterPlugin, BaijiayunApi {
     var proxyApiRegistrar: ProxyAPIRegistrar?
 
     public init(binaryMessenger: FlutterBinaryMessenger) {
@@ -97,12 +97,17 @@ public class FlutterBaijiayunPlugin: NSObject, FlutterPlugin {
         let viewFactory = FlutterViewFactory(instanceManager: instance.proxyApiRegistrar!.instanceManager)
         registrar.register(viewFactory, withId: "com.haijunwei.flutter/baijiayun_video_player")
         registrar.publish(instance)
+        BaijiayunApiSetup.setUp(binaryMessenger: registrar.messenger(), api: instance)
     }
 
     public func detachFromEngine(for _: any FlutterPluginRegistrar) {
         proxyApiRegistrar?.ignoreCallsToDart = true
         proxyApiRegistrar?.tearDown()
         proxyApiRegistrar = nil
+    }
+    
+    func setPrivateDomainPrefix(prefix: String) throws {
+        BJVAppConfig.sharedInstance().privateDomainPrefix = prefix
     }
 }
 
@@ -124,7 +129,6 @@ class VideoPlayer: UIView, FlutterStreamHandler {
         self.playerType = playerType
         self.pigeonApi = pigeonApi
         manager = BJVPlayerManager(playerType: .avPlayer)
-        BJVAppConfig.sharedInstance().privateDomainPrefix = "e33180987"
 
         super.init(frame: .zero)
         if let e = manager.playerView {
