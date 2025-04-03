@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_baijiayun_ios/src/baijiayun.g.dart';
@@ -21,9 +23,16 @@ class VideoPlayerController extends PlatformVideoPlayerController {
           params is VideoPlayerControllerCreationParams ? params : VideoPlayerControllerCreationParams(),
         );
 
-  late final VideoPlayer _player = VideoPlayer(type: (params as VideoPlayerControllerCreationParams).type);
+  late final VideoPlayer _player = VideoPlayer(
+    type: (params as VideoPlayerControllerCreationParams).type,
+    onEvent: (_, player, event) {
+      _eventController.add(_mapEvent(event));
+    },
+  );
 
   late final _playerId = (params as VideoPlayerControllerCreationParams)._instanceManager.getIdentifier(_player);
+
+  final _eventController = StreamController<VideoEvent>.broadcast();
 
   @override
   Widget build(BuildContext context) {
@@ -33,11 +42,6 @@ class VideoPlayerController extends PlatformVideoPlayerController {
       creationParams: _playerId,
       creationParamsCodec: const StandardMessageCodec(),
     );
-  }
-
-  @override
-  Future<void> initialize() {
-    return _player.initialize();
   }
 
   @override
@@ -77,41 +81,38 @@ class VideoPlayerController extends PlatformVideoPlayerController {
 
   @override
   Stream<VideoEvent> videoEvents() {
-    return _eventChannelFor(_playerId ?? 0).receiveBroadcastStream().map((event) {
-      final Map<dynamic, dynamic> map = event;
-      switch (map['event']) {
-        case 'ready':
-          return VideoEvent(eventType: VideoEventType.ready);
-        case 'resolutionUpdate':
-          return VideoEvent(
-            eventType: VideoEventType.resolutionUpdate,
-            size: Size(
-              map['width']?.toDouble() ?? 0.0,
-              map['height']?.toDouble() ?? 0.0,
-            ),
-          );
-        case 'progressUpdate':
-          final position = map['position'] ?? 0;
-          if (position < 0) {
-            return VideoEvent(eventType: VideoEventType.unknown);
-          }
-          return VideoEvent(
-            eventType: VideoEventType.progressUpdate,
-            duration: Duration(milliseconds: map['duration'] ?? 0),
-            position: Duration(milliseconds: position),
-            buffered: Duration(milliseconds: map['buffered'] ?? 0),
-          );
-        case 'ended':
-          return VideoEvent(eventType: VideoEventType.ended);
-        case 'failedToLoad':
-          return VideoEvent(eventType: VideoEventType.failedToLoad);
-        default:
-          return VideoEvent(eventType: VideoEventType.unknown);
-      }
-    });
+    return _eventController.stream;
   }
 
-  EventChannel _eventChannelFor(int playerId) {
-    return EventChannel('com.haijunwei.flutter/baijiayun_video_player/videoEvents$playerId');
+  VideoEvent _mapEvent(Map map) {
+    switch (map['event']) {
+      case 'ready':
+        return VideoEvent(eventType: VideoEventType.ready);
+      case 'resolutionUpdate':
+        return VideoEvent(
+          eventType: VideoEventType.resolutionUpdate,
+          size: Size(
+            map['width']?.toDouble() ?? 0.0,
+            map['height']?.toDouble() ?? 0.0,
+          ),
+        );
+      case 'progressUpdate':
+        final position = map['position'] ?? 0;
+        if (position < 0) {
+          return VideoEvent(eventType: VideoEventType.unknown);
+        }
+        return VideoEvent(
+          eventType: VideoEventType.progressUpdate,
+          duration: Duration(milliseconds: map['duration'] ?? 0),
+          position: Duration(milliseconds: position),
+          buffered: Duration(milliseconds: map['buffered'] ?? 0),
+        );
+      case 'ended':
+        return VideoEvent(eventType: VideoEventType.ended);
+      case 'failedToLoad':
+        return VideoEvent(eventType: VideoEventType.failedToLoad);
+      default:
+        return VideoEvent(eventType: VideoEventType.unknown);
+    }
   }
 }

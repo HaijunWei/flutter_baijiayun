@@ -21,10 +21,6 @@ abstract class PlatformVideoPlayerController extends PlatformInterface {
 
   Widget build(BuildContext context);
 
-  Future<void> initialize() {
-    throw UnimplementedError('initialize has not been implemented.');
-  }
-
   Future<void> setOnlineVideo({required String id, required String token}) {
     throw UnimplementedError('setOnlineVideo has not been implemented.');
   }

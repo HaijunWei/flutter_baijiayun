@@ -7,7 +7,6 @@ enum VideoPlayerType { avPlayer, ijkPlayer }
 abstract class VideoPlayer {
   VideoPlayer(VideoPlayerType type);
 
-  void initialize();
   void setOnlineVideo({required String id, required String token});
   void play();
   void pause();
@@ -15,6 +14,8 @@ abstract class VideoPlayer {
   void seekTo(int position);
   void setPlaybackSpeed(double speed);
   void setBackgroundPlay(bool backgroundPlay);
+
+  late void Function(VideoPlayer player, Map event)? onEvent;
 }
 
 @HostApi()

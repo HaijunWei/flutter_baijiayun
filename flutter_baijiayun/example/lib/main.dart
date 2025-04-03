@@ -34,7 +34,6 @@ class _HomePageState extends State<HomePage> {
     controller.addListener(() {
       print(controller.value);
     });
-    controller.initialize();
     controller.setOnlineVideo(
       id: '300640151',
       token: '1HESMHR94-7FbckRSbAqZyYRZOjsF88q1yJXKdiXZWDAUE3NDhIV_TG5JtrxIFp-',

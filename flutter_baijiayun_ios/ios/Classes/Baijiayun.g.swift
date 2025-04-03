@@ -525,7 +525,6 @@ class BaijiayunPigeonCodec: FlutterStandardMessageCodec, @unchecked Sendable {
 
 protocol PigeonApiDelegateVideoPlayer {
   func pigeonDefaultConstructor(pigeonApi: PigeonApiVideoPlayer, type: VideoPlayerType) throws -> VideoPlayer
-  func initialize(pigeonApi: PigeonApiVideoPlayer, pigeonInstance: VideoPlayer) throws
   func setOnlineVideo(pigeonApi: PigeonApiVideoPlayer, pigeonInstance: VideoPlayer, id: String, token: String) throws
   func play(pigeonApi: PigeonApiVideoPlayer, pigeonInstance: VideoPlayer) throws
   func pause(pigeonApi: PigeonApiVideoPlayer, pigeonInstance: VideoPlayer) throws
@@ -536,6 +535,7 @@ protocol PigeonApiDelegateVideoPlayer {
 }
 
 protocol PigeonApiProtocolVideoPlayer {
+  func onEvent(pigeonInstance pigeonInstanceArg: VideoPlayer, player playerArg: VideoPlayer, event eventArg: [AnyHashable?: Any?], completion: @escaping (Result<Void, PigeonError>) -> Void)
 }
 
 final class PigeonApiVideoPlayer: PigeonApiProtocolVideoPlayer  {
@@ -568,21 +568,6 @@ withIdentifier: pigeonIdentifierArg)
       }
     } else {
       pigeonDefaultConstructorChannel.setMessageHandler(nil)
-    }
-    let initializeChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flutter_baijiayun_ios.VideoPlayer.initialize", binaryMessenger: binaryMessenger, codec: codec)
-    if let api = api {
-      initializeChannel.setMessageHandler { message, reply in
-        let args = message as! [Any?]
-        let pigeonInstanceArg = args[0] as! VideoPlayer
-        do {
-          try api.pigeonDelegate.initialize(pigeonApi: api, pigeonInstance: pigeonInstanceArg)
-          reply(wrapResult(nil))
-        } catch {
-          reply(wrapError(error))
-        }
-      }
-    } else {
-      initializeChannel.setMessageHandler(nil)
     }
     let setOnlineVideoChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flutter_baijiayun_ios.VideoPlayer.setOnlineVideo", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
@@ -730,6 +715,35 @@ withIdentifier: pigeonIdentifierArg)
       }
     }
   }
+  func onEvent(pigeonInstance pigeonInstanceArg: VideoPlayer, player playerArg: VideoPlayer, event eventArg: [AnyHashable?: Any?], completion: @escaping (Result<Void, PigeonError>) -> Void)   {
+    if pigeonRegistrar.ignoreCallsToDart {
+      completion(
+        .failure(
+          PigeonError(
+            code: "ignore-calls-error",
+            message: "Calls to Dart are being ignored.", details: "")))
+      return
+    }
+    let binaryMessenger = pigeonRegistrar.binaryMessenger
+    let codec = pigeonRegistrar.codec
+    let channelName: String = "dev.flutter.pigeon.flutter_baijiayun_ios.VideoPlayer.onEvent"
+    let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
+    channel.sendMessage([pigeonInstanceArg, playerArg, eventArg] as [Any?]) { response in
+      guard let listResponse = response as? [Any?] else {
+        completion(.failure(createConnectionError(withChannelName: channelName)))
+        return
+      }
+      if listResponse.count > 1 {
+        let code: String = listResponse[0] as! String
+        let message: String? = nilOrValue(listResponse[1])
+        let details: String? = nilOrValue(listResponse[2])
+        completion(.failure(PigeonError(code: code, message: message, details: details)))
+      } else {
+        completion(.success(Void()))
+      }
+    }
+  }
+
 }
 /// Generated protocol from Pigeon that represents a handler of messages from Flutter.
 protocol BaijiayunApi {

@@ -100,82 +100,66 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   VideoPlayerController.fromPlatformCreationParams(
     PlatformVideoPlayerControllerCreationParams params,
   )   : platform = PlatformVideoPlayerController(params),
-        super(VideoPlayerValue(duration: Duration.zero));
+        super(VideoPlayerValue(duration: Duration.zero)) {
+    _eventSubscription = platform.videoEvents().listen(_eventListener, onError: _errorListener);
+  }
 
   final PlatformVideoPlayerController platform;
 
-  bool _initialized = false;
-  bool get initialized => _initialized;
   bool _isDisposed = false;
 
-  Completer<void>? _creatingCompleter;
   StreamSubscription<dynamic>? _eventSubscription;
 
-  Future<void> initialize() async {
-    if (_initialized) return;
-    if (_creatingCompleter != null) {
-      await _creatingCompleter!.future;
-      return;
+  void _eventListener(VideoEvent event) async {
+    if (_isDisposed) return;
+
+    switch (event.eventType) {
+      case VideoEventType.ready:
+        // 卡顿后恢复播放也会调用此消息
+        if (value.isReady) {
+          value = value.copyWith(isFailedToLoad: false);
+          break;
+        }
+        value = value.copyWith(
+          isReady: true,
+          isLoading: false,
+          isFailedToLoad: false,
+        );
+        // if (_initializedPosition != null) {
+        //   seekTo(_initializedPosition!.inSeconds);
+        // }
+        // if (_autoPlay) resume();
+        break;
+      case VideoEventType.resolutionUpdate:
+        if (value.isStop) break;
+        value = value.copyWith(
+          size: event.size,
+        );
+        break;
+      case VideoEventType.progressUpdate:
+        if (value.isStop) break;
+        value = value.copyWith(
+          duration: event.duration,
+          position: event.position,
+          buffered: event.buffered,
+        );
+        break;
+      case VideoEventType.ended:
+        if (!value.isStop) stop();
+        break;
+      case VideoEventType.failedToLoad:
+        value = value.copyWith(
+          isFailedToLoad: true,
+        );
+        break;
+      case VideoEventType.unknown:
+        break;
     }
-    await platform.initialize();
-    _creatingCompleter = Completer<void>();
+  }
 
-    _creatingCompleter!.complete(null);
-
-    void eventListener(VideoEvent event) async {
-      if (_isDisposed) return;
-
-      switch (event.eventType) {
-        case VideoEventType.ready:
-          // 卡顿后恢复播放也会调用此消息
-          if (value.isReady) {
-            value = value.copyWith(isFailedToLoad: false);
-            break;
-          }
-          value = value.copyWith(
-            isReady: true,
-            isLoading: false,
-            isFailedToLoad: false,
-          );
-          // if (_initializedPosition != null) {
-          //   seekTo(_initializedPosition!.inSeconds);
-          // }
-          // if (_autoPlay) resume();
-          break;
-        case VideoEventType.resolutionUpdate:
-          if (value.isStop) break;
-          value = value.copyWith(
-            size: event.size,
-          );
-          break;
-        case VideoEventType.progressUpdate:
-          if (value.isStop) break;
-          value = value.copyWith(
-            duration: event.duration,
-            position: event.position,
-            buffered: event.buffered,
-          );
-          break;
-        case VideoEventType.ended:
-          if (!value.isStop) stop();
-          break;
-        case VideoEventType.failedToLoad:
-          value = value.copyWith(
-            isFailedToLoad: true,
-          );
-          break;
-        case VideoEventType.unknown:
-          break;
-      }
-    }
-
-    void errorListener(Object obj) {
-      final PlatformException e = obj as PlatformException;
-      value = VideoPlayerValue.erroneous(e.message!);
-    }
-
-    _eventSubscription = platform.videoEvents().listen(eventListener, onError: errorListener);
-    _initialized = true;
+  void _errorListener(Object obj) {
+    final PlatformException e = obj as PlatformException;
+    value = VideoPlayerValue.erroneous(e.message!);
   }
 
   Future<void> setOnlineVideo({required String id, required String token}) {
@@ -206,20 +190,13 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     return platform.setBackgroundPlay(backgroundPlay);
   }
 
-  Stream<VideoEvent> videoEvents() {
-    throw UnimplementedError('videoEvents has not been implemented.');
-  }
-
   @override
   Future<void> dispose() async {
-    if (_creatingCompleter != null) {
-      await _creatingCompleter!.future;
-      if (!_isDisposed) {
-        _isDisposed = true;
-        await _eventSubscription?.cancel();
-      }
-      // _lifeCycleObserver.dispose();
+    if (!_isDisposed) {
+      _isDisposed = true;
+      await _eventSubscription?.cancel();
     }
+    // _lifeCycleObserver.dispose();
     _isDisposed = true;
     super.dispose();
   }

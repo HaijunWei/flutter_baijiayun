@@ -418,6 +418,7 @@ class VideoPlayer extends PigeonInternalProxyApiBaseClass {
   VideoPlayer({
     super.pigeon_binaryMessenger,
     super.pigeon_instanceManager,
+    this.onEvent,
     required VideoPlayerType type,
   }) {
     final int pigeonVar_instanceIdentifier =
@@ -459,16 +460,47 @@ class VideoPlayer extends PigeonInternalProxyApiBaseClass {
   VideoPlayer.pigeon_detached({
     super.pigeon_binaryMessenger,
     super.pigeon_instanceManager,
+    this.onEvent,
   });
 
   late final _PigeonInternalProxyApiBaseCodec _pigeonVar_codecVideoPlayer =
       _PigeonInternalProxyApiBaseCodec(pigeon_instanceManager);
+
+  /// Callback method.
+  ///
+  /// For the associated Native object to be automatically garbage collected,
+  /// it is required that the implementation of this `Function` doesn't have a
+  /// strong reference to the encapsulating class instance. When this `Function`
+  /// references a non-local variable, it is strongly recommended to access it
+  /// with a `WeakReference`:
+  ///
+  /// ```dart
+  /// final WeakReference weakMyVariable = WeakReference(myVariable);
+  /// final VideoPlayer instance = VideoPlayer(
+  ///  onEvent: (VideoPlayer pigeon_instance, ...) {
+  ///    print(weakMyVariable?.target);
+  ///  },
+  /// );
+  /// ```
+  ///
+  /// Alternatively, [PigeonInstanceManager.removeWeakReference] can be used to
+  /// release the associated Native object manually.
+  final void Function(
+    VideoPlayer pigeon_instance,
+    VideoPlayer player,
+    Map<Object?, Object?> event,
+  )? onEvent;
 
   static void pigeon_setUpMessageHandlers({
     bool pigeon_clearHandlers = false,
     BinaryMessenger? pigeon_binaryMessenger,
     PigeonInstanceManager? pigeon_instanceManager,
     VideoPlayer Function()? pigeon_newInstance,
+    void Function(
+      VideoPlayer pigeon_instance,
+      VideoPlayer player,
+      Map<Object?, Object?> event,
+    )? onEvent,
   }) {
     final _PigeonInternalProxyApiBaseCodec pigeonChannelCodec =
         _PigeonInternalProxyApiBaseCodec(
@@ -511,32 +543,42 @@ class VideoPlayer extends PigeonInternalProxyApiBaseClass {
         });
       }
     }
-  }
 
-  Future<void> initialize() async {
-    final _PigeonInternalProxyApiBaseCodec pigeonChannelCodec =
-        _pigeonVar_codecVideoPlayer;
-    final BinaryMessenger? pigeonVar_binaryMessenger = pigeon_binaryMessenger;
-    const String pigeonVar_channelName =
-        'dev.flutter.pigeon.flutter_baijiayun_ios.VideoPlayer.initialize';
-    final BasicMessageChannel<Object?> pigeonVar_channel =
-        BasicMessageChannel<Object?>(
-      pigeonVar_channelName,
-      pigeonChannelCodec,
-      binaryMessenger: pigeonVar_binaryMessenger,
-    );
-    final List<Object?>? pigeonVar_replyList =
-        await pigeonVar_channel.send(<Object?>[this]) as List<Object?>?;
-    if (pigeonVar_replyList == null) {
-      throw _createConnectionError(pigeonVar_channelName);
-    } else if (pigeonVar_replyList.length > 1) {
-      throw PlatformException(
-        code: pigeonVar_replyList[0]! as String,
-        message: pigeonVar_replyList[1] as String?,
-        details: pigeonVar_replyList[2],
-      );
-    } else {
-      return;
+    {
+      final BasicMessageChannel<Object?> pigeonVar_channel =
+          BasicMessageChannel<Object?>(
+              'dev.flutter.pigeon.flutter_baijiayun_ios.VideoPlayer.onEvent',
+              pigeonChannelCodec,
+              binaryMessenger: binaryMessenger);
+      if (pigeon_clearHandlers) {
+        pigeonVar_channel.setMessageHandler(null);
+      } else {
+        pigeonVar_channel.setMessageHandler((Object? message) async {
+          assert(message != null,
+              'Argument for dev.flutter.pigeon.flutter_baijiayun_ios.VideoPlayer.onEvent was null.');
+          final List<Object?> args = (message as List<Object?>?)!;
+          final VideoPlayer? arg_pigeon_instance = (args[0] as VideoPlayer?);
+          assert(arg_pigeon_instance != null,
+              'Argument for dev.flutter.pigeon.flutter_baijiayun_ios.VideoPlayer.onEvent was null, expected non-null VideoPlayer.');
+          final VideoPlayer? arg_player = (args[1] as VideoPlayer?);
+          assert(arg_player != null,
+              'Argument for dev.flutter.pigeon.flutter_baijiayun_ios.VideoPlayer.onEvent was null, expected non-null VideoPlayer.');
+          final Map<Object?, Object?>? arg_event =
+              (args[2] as Map<Object?, Object?>?);
+          assert(arg_event != null,
+              'Argument for dev.flutter.pigeon.flutter_baijiayun_ios.VideoPlayer.onEvent was null, expected non-null Map<Object?, Object?>.');
+          try {
+            (onEvent ?? arg_pigeon_instance!.onEvent)
+                ?.call(arg_pigeon_instance!, arg_player!, arg_event!);
+            return wrapResponse(empty: true);
+          } on PlatformException catch (e) {
+            return wrapResponse(error: e);
+          } catch (e) {
+            return wrapResponse(
+                error: PlatformException(code: 'error', message: e.toString()));
+          }
+        });
+      }
     }
   }
 
@@ -737,6 +779,7 @@ class VideoPlayer extends PigeonInternalProxyApiBaseClass {
     return VideoPlayer.pigeon_detached(
       pigeon_binaryMessenger: pigeon_binaryMessenger,
       pigeon_instanceManager: pigeon_instanceManager,
+      onEvent: onEvent,
     );
   }
 }

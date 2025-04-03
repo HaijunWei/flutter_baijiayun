@@ -15,10 +15,6 @@ class VideoPlayerProxyAPIDelegate: PigeonApiDelegateVideoPlayer {
         return VideoPlayer(pigeonApi: pigeonApi, playerType: type)
     }
 
-    func initialize(pigeonApi _: PigeonApiVideoPlayer, pigeonInstance: VideoPlayer) throws {
-        pigeonInstance.initialize()
-    }
-
     func setOnlineVideo(pigeonApi _: PigeonApiVideoPlayer, pigeonInstance: VideoPlayer, id: String, token: String) throws {
         pigeonInstance.setOnlineVideo(id: id, token: token)
     }
@@ -111,14 +107,10 @@ public class FlutterBaijiayunPlugin: NSObject, FlutterPlugin, BaijiayunApi {
     }
 }
 
-class VideoPlayer: UIView, FlutterStreamHandler {
+class VideoPlayer: UIView {
     private let playerType: VideoPlayerType
     private let pigeonApi: PigeonApiVideoPlayer
     let manager: BJVPlayerManager
-
-    private lazy var playerId: Int64 = pigeonApi.pigeonRegistrar.instanceManager.identifierWithStrongReference(forInstance: self) ?? 0
-    private lazy var eventChannel = FlutterEventChannel(name: "com.haijunwei.flutter/baijiayun_video_player/videoEvents\(playerId)", binaryMessenger: pigeonApi.pigeonRegistrar.binaryMessenger)
-    private var eventSink: FlutterEventSink?
 
     var statusObserver: NSKeyValueObservation?
     var durationObserver: NSKeyValueObservation?
@@ -137,11 +129,11 @@ class VideoPlayer: UIView, FlutterStreamHandler {
 
         statusObserver = manager.observe(\.playStatus) { [weak self] manager, _ in
             if manager.playStatus == .ready {
-                self?.eventSink?(["event": "ready"])
+                self?.sendEvent(["event": "ready"])
             } else if manager.playStatus == .reachEnd {
-                self?.eventSink?(["event": "ended"])
+                self?.sendEvent(["event": "ended"])
             } else if manager.playStatus == .failed {
-                self?.eventSink?(["event": "failedToLoad"])
+                self?.sendEvent(["event": "failedToLoad"])
             }
         }
 
@@ -155,13 +147,13 @@ class VideoPlayer: UIView, FlutterStreamHandler {
 
         videoInfoObserver = manager.observe(\.currDefinitionInfo) { [weak self] manager, _ in
             if let width = manager.currDefinitionInfo?.width, let height = manager.currDefinitionInfo?.height {
-                self?.eventSink?(["event": "resolutionUpdate", "width": width, "height": height])
+                self?.sendEvent(["event": "resolutionUpdate", "width": width, "height": height])
             }
         }
     }
 
     private func updateTime() {
-        eventSink?([
+        sendEvent([
             "event": "progressUpdate",
             "duration": Int(manager.duration * 1000),
             "position": Int(manager.currentTime * 1000),
@@ -179,23 +171,13 @@ class VideoPlayer: UIView, FlutterStreamHandler {
         manager.playerView?.frame = bounds
     }
 
-    // MARK: -
-
-    func onListen(withArguments _: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
-        eventSink = events
-        return nil
-    }
-
-    func onCancel(withArguments _: Any?) -> FlutterError? {
-        eventSink = nil
-        return nil
+    private func sendEvent(_ event: [AnyHashable: Any]) {
+        pigeonApi.onEvent(pigeonInstance: self, player: self, event: event) { _ in
+            
+        }
     }
 
     // MARK: -
-
-    func initialize() {
-        eventChannel.setStreamHandler(self)
-    }
 
     func setOnlineVideo(id: String, token: String) {
         manager.setupOnlineVideo(withID: id, token: token)
