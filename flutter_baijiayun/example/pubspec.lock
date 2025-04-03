@@ -77,6 +77,13 @@ packages:
       relative: true
     source: path
     version: "0.0.1"
+  flutter_baijiayun_android:
+    dependency: transitive
+    description:
+      path: "../../flutter_baijiayun_android"
+      relative: true
+    source: path
+    version: "0.0.1"
   flutter_baijiayun_ios:
     dependency: transitive
     description:

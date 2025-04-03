@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 
 import 'package:flutter_baijiayun/flutter_baijiayun.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await BaijiayunApi.initialize();
   BaijiayunApi.setPrivateDomainPrefix('e33180987');
 
   runApp(const MyApp());

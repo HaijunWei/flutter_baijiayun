@@ -21,6 +21,10 @@ abstract class BaijiayunApiPlatform extends PlatformInterface {
     _instance = instance;
   }
 
+  Future<void> initialize() {
+    throw UnimplementedError('initialize has not been implemented.');
+  }
+
   Future<void> setPrivateDomainPrefix(String prefix) {
     throw UnimplementedError('setPrivateDomainPrefix has not been implemented.');
   }

@@ -3,6 +3,10 @@ import 'package:flutter_baijiayun_platform_interface/flutter_baijiayun_platform_
 class BaijiayunApi {
   static final BaijiayunApiPlatform _instance = BaijiayunApiPlatform.instance!;
 
+  static Future<void> initialize() {
+    return _instance.initialize();
+  }
+
   static Future<void> setPrivateDomainPrefix(String prefix) {
     return _instance.setPrivateDomainPrefix(prefix);
   }

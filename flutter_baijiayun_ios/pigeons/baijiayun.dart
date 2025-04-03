@@ -20,5 +20,6 @@ abstract class VideoPlayer {
 
 @HostApi()
 abstract class BaijiayunApi {
+  void initialize();
   void setPrivateDomainPrefix(String prefix);
 }

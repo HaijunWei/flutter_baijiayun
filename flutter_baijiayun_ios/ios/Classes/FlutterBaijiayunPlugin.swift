@@ -102,6 +102,10 @@ public class FlutterBaijiayunPlugin: NSObject, FlutterPlugin, BaijiayunApi {
         proxyApiRegistrar = nil
     }
     
+    func initialize() throws {
+        
+    }
+    
     func setPrivateDomainPrefix(prefix: String) throws {
         BJVAppConfig.sharedInstance().privateDomainPrefix = prefix
     }
