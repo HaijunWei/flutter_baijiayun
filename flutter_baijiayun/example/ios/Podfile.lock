@@ -1,18 +1,18 @@
 PODS:
-  - BaijiaYun/_BJVideoPlayerCore (4.21.0):
+  - BaijiaYun/_BJVideoPlayerCore (4.22.0):
     - BaijiaYun/BaijiaYunPrivacy
-    - BJLiveBase (~> 4.21.0)
-  - BaijiaYun/BaijiaYunPrivacy (4.21.0)
-  - BaijiaYun/BJVideoPlayerCore (4.21.0):
+    - BJLiveBase (~> 4.22.0)
+  - BaijiaYun/BaijiaYunPrivacy (4.22.0)
+  - BaijiaYun/BJVideoPlayerCore (4.22.0):
     - BaijiaYun/_BJVideoPlayerCore
     - BJYIJK (~> 4.3)
-  - BJLiveBase (4.21.0):
-    - BJLiveBase/All (= 4.21.0)
-  - BJLiveBase/All (4.21.0):
+  - BJLiveBase (4.22.0):
+    - BJLiveBase/All (= 4.22.0)
+  - BJLiveBase/All (4.22.0):
     - BJLiveBase/base
     - SDWebImage (~> 5.0)
     - SDWebImageWebPCoder
-  - BJLiveBase/base (4.21.0):
+  - BJLiveBase/base (4.22.0):
     - BJLLog (~> 3.7.4.4)
   - BJLLog (3.7.4.6):
     - BJLLog/Core (= 3.7.4.6)
@@ -70,8 +70,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/integration_test/ios"
 
 SPEC CHECKSUMS:
-  BaijiaYun: 9fc2a787b2b2c7fa96646cf075d7c0eb65cdc3e2
-  BJLiveBase: 0a584f5c8b685e0718cf84aa794f38ed412329b7
+  BaijiaYun: d3aa03fee8cfd17c678ff180b98621d65f80edf1
+  BJLiveBase: 0ff68fa4973b6a32acd99fc8ffcd9017ca1ec17a
   BJLLog: 8f6f9d90bdbc2082efb4250f6e359cce6ef3ebad
   BJYIJK: 879896868e3e06d6ea8d3895daf56bb714bf3b09
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7

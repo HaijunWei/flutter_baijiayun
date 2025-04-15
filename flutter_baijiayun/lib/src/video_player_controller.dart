@@ -112,7 +112,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   bool _autoPlay = false;
   bool _backgroundPlay = false;
   bool get backgroundPlay => _backgroundPlay;
-  Duration? _initializedPosition;
+  Duration? _initialPosition;
 
   late _VideoAppLifeCycleObserver _lifeCycleObserver;
 
@@ -133,8 +133,11 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
           isLoading: false,
           isFailedToLoad: false,
         );
-        if (_initializedPosition != null) {
-          seekTo(_initializedPosition!.inSeconds);
+        if (_initialPosition != null) {
+          // 不增加点延迟，可能设置不成功
+          Future.delayed(const Duration(milliseconds: 50), () {
+            if (!_isDisposed) seekTo(_initialPosition!.inSeconds);
+          });
         }
         if (_autoPlay) resume();
         break;
@@ -177,7 +180,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     Duration? position,
   }) async {
     _autoPlay = autoPlay;
-    _initializedPosition = position;
+    _initialPosition = position;
     value = value.copyWith(
       isReady: false,
       isStop: false,
@@ -191,7 +194,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   }
 
   Future<void> replay() async {
-    _initializedPosition = null;
+    _initialPosition = null;
     await platform.play();
     _autoPlay = true;
     value = value.copyWith(
@@ -247,7 +250,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
       _isDisposed = true;
       await _eventSubscription?.cancel();
     }
-    // _lifeCycleObserver.dispose();
+    _lifeCycleObserver.dispose();
     _isDisposed = true;
     super.dispose();
   }

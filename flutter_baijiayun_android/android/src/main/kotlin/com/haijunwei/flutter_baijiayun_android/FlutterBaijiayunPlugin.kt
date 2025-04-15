@@ -191,5 +191,6 @@ class VideoPlayer(val flutterPluginBinding: FlutterPlugin.FlutterPluginBinding, 
   }
 
   fun setBackgroundPlay(backgroundPlay: Boolean) {
+    player.supportBackgroundAudio(backgroundPlay)
   }
 }

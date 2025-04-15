@@ -38,8 +38,8 @@ class _HomePageState extends State<HomePage> {
     controller.setOnlineVideo(
       id: '300640151',
       token: '1HESMHR94-7FbckRSbAqZyYRZOjsF88q1yJXKdiXZWDAUE3NDhIV_TG5JtrxIFp-',
+      position: const Duration(minutes: 50),
     );
-    controller.play();
   }
 
   @override

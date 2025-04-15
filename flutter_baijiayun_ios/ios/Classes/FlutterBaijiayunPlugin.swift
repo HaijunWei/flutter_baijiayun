@@ -39,7 +39,9 @@ class VideoPlayerProxyAPIDelegate: PigeonApiDelegateVideoPlayer {
         pigeonInstance.setPlaybackSpeed(speed: speed)
     }
 
-    func setBackgroundPlay(pigeonApi _: PigeonApiVideoPlayer, pigeonInstance _: VideoPlayer, backgroundPlay _: Bool) throws {}
+    func setBackgroundPlay(pigeonApi _: PigeonApiVideoPlayer, pigeonInstance: VideoPlayer, backgroundPlay: Bool) throws {
+        pigeonInstance.setBackgroundPlay(backgroundPlay: backgroundPlay)
+    }
 }
 
 class FlutterViewFactory: NSObject, FlutterPlatformViewFactory {
@@ -101,11 +103,9 @@ public class FlutterBaijiayunPlugin: NSObject, FlutterPlugin, BaijiayunApi {
         proxyApiRegistrar?.tearDown()
         proxyApiRegistrar = nil
     }
-    
-    func initialize() throws {
-        
-    }
-    
+
+    func initialize() throws {}
+
     func setPrivateDomainPrefix(prefix: String) throws {
         BJVAppConfig.sharedInstance().privateDomainPrefix = prefix
     }
@@ -177,7 +177,6 @@ class VideoPlayer: UIView {
 
     private func sendEvent(_ event: [AnyHashable: Any]) {
         pigeonApi.onEvent(pigeonInstance: self, player: self, event: event) { _ in
-            
         }
     }
 
@@ -205,5 +204,9 @@ class VideoPlayer: UIView {
 
     func setPlaybackSpeed(speed: Double) {
         manager.rate = speed
+    }
+
+    func setBackgroundPlay(backgroundPlay: Bool) {
+        manager.backgroundAudioEnabled = backgroundPlay
     }
 }

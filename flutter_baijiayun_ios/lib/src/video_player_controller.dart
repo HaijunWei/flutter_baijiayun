@@ -45,7 +45,10 @@ class VideoPlayerController extends PlatformVideoPlayerController {
   }
 
   @override
-  Future<void> setOnlineVideo({required String id, required String token}) {
+  Future<void> setOnlineVideo({
+    required String id,
+    required String token,
+  }) {
     return _player.setOnlineVideo(id, token);
   }
 
