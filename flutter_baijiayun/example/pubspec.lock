@@ -80,23 +80,29 @@ packages:
   flutter_baijiayun_android:
     dependency: transitive
     description:
-      path: "../../flutter_baijiayun_android"
-      relative: true
-    source: path
+      path: flutter_baijiayun_android
+      ref: HEAD
+      resolved-ref: e70ce69832e0f108168b301f410b252d1c8029ee
+      url: "https://github.com/HaijunWei/flutter_baijiayun.git"
+    source: git
     version: "0.0.1"
   flutter_baijiayun_ios:
     dependency: transitive
     description:
-      path: "../../flutter_baijiayun_ios"
-      relative: true
-    source: path
+      path: flutter_baijiayun_ios
+      ref: HEAD
+      resolved-ref: e70ce69832e0f108168b301f410b252d1c8029ee
+      url: "https://github.com/HaijunWei/flutter_baijiayun.git"
+    source: git
     version: "0.0.1"
   flutter_baijiayun_platform_interface:
     dependency: transitive
     description:
-      path: "../../flutter_baijiayun_platform_interface"
-      relative: true
-    source: path
+      path: flutter_baijiayun_platform_interface
+      ref: HEAD
+      resolved-ref: e70ce69832e0f108168b301f410b252d1c8029ee
+      url: "https://github.com/HaijunWei/flutter_baijiayun.git"
+    source: git
     version: "0.0.1"
   flutter_driver:
     dependency: transitive
