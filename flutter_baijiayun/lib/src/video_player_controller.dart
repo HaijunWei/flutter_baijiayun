@@ -173,7 +173,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   Future<void> setOnlineVideo({
     required String id,
     required String token,
-    bool autoPlay = false,
+    bool autoPlay = true,
     Duration? position,
   }) async {
     _autoPlay = autoPlay;
