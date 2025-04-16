@@ -3,18 +3,23 @@ package com.haijunwei.flutter_baijiayun_android
 import android.content.Context
 import android.util.Log
 import android.view.View
+import android.view.ViewGroup
 import com.baijiayun.BJYPlayerSDK
 import com.baijiayun.videoplayer.IBJYVideoPlayer
 import com.baijiayun.videoplayer.VideoPlayerFactory
+import com.baijiayun.videoplayer.listeners.OnBufferedUpdateListener
+import com.baijiayun.videoplayer.listeners.OnBufferingListener
 import com.baijiayun.videoplayer.listeners.OnPlayerStatusChangeListener
 import com.baijiayun.videoplayer.listeners.OnPlayingTimeChangeListener
 import com.baijiayun.videoplayer.player.PlayerStatus
+import com.baijiayun.videoplayer.render.AspectRatio
 import com.baijiayun.videoplayer.widget.BJYPlayerView
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.StandardMessageCodec
 import io.flutter.plugin.platform.PlatformView
 import io.flutter.plugin.platform.PlatformViewFactory
+import java.util.logging.Logger
 
 /** FlutterBaijiayunAndroidPlugin */
 class FlutterBaijiayunPlugin: FlutterPlugin, BaijiayunApi {
@@ -56,9 +61,13 @@ class FlutterBaijiayunPlugin: FlutterPlugin, BaijiayunApi {
 class FlutterViewFactory(val instanceManager: BaijiayunPigeonInstanceManager): PlatformViewFactory(StandardMessageCodec.INSTANCE) {
   override fun create(context: Context?, viewId: Int, args: Any?): PlatformView {
     val identifier = (args as Int).toLong()
-    val instance = instanceManager.getInstance<PlatformView>(identifier)
-    if (instance is PlatformView) {
-      return instance
+    val instance = instanceManager.getInstance<VideoPlayer>(identifier)
+    if (instance is VideoPlayer) {
+      instance.createPlayerView(context!!)
+      return instance.platformView!!
+//      val parent = instance.platformView.view.parent as? ViewGroup
+//      parent?.removeView(instance.platformView.view)
+//      return instance.platformView
     }
     throw IllegalStateException("Unable to find a PlatformView or View instance: $args, $instance")
   }
@@ -108,28 +117,48 @@ class VideoPlayerProxyAPIDelegate(val flutterPluginBinding: FlutterPlugin.Flutte
 }
 
 
-class VideoPlayer(val flutterPluginBinding: FlutterPlugin.FlutterPluginBinding, val pigeonApi: PigeonApiVideoPlayer): PlatformView {
-  private val playerView: BJYPlayerView
+class VideoPlayerPlatformView(val context: Context): PlatformView {
+  val playerView: BJYPlayerView
+
+  init {
+    playerView = VideoPlayerFactory.createPlayerView(context)
+  }
+
+  override fun getView(): View {
+    return playerView
+  }
+
+  override fun dispose() {
+
+  }
+
+}
+
+class VideoPlayer(val flutterPluginBinding: FlutterPlugin.FlutterPluginBinding, val pigeonApi: PigeonApiVideoPlayer) {
+  var platformView: VideoPlayerPlatformView? = null
   private val player: IBJYVideoPlayer
+  private var isStop: Boolean = false
 
   init {
     player = VideoPlayerFactory.Builder()
       .setContext(flutterPluginBinding.applicationContext)
+      .setSupportBreakPointPlay(false)
       .build()
-    playerView = VideoPlayerFactory.createPlayerView(flutterPluginBinding.applicationContext)
-    player.bindPlayerView(playerView)
 
     player.addOnPlayerStatusChangeListener(object: OnPlayerStatusChangeListener {
       override fun onStatusChange(p0: PlayerStatus?) {
+        Log.i("Haijun1", p0.toString())
         if (p0 == PlayerStatus.STATE_PREPARED) {
           sendEvent(mapOf("event" to "ready"))
           sendEvent(mapOf(
             "event" to "resolutionUpdate",
-            "width" to playerView.videoWidth,
-            "height" to playerView.videoHeight,
+            "width" to platformView?.playerView?.videoWidth,
+            "height" to platformView?.playerView?.videoHeight,
           ))
-        } else if (p0 == PlayerStatus.STATE_STOPPED) {
+        } else if (p0 == PlayerStatus.STATE_STOPPED || p0 == PlayerStatus.STATE_PLAYBACK_COMPLETED) {
+          if (isStop) return
           sendEvent(mapOf("event" to "ended"))
+          isStop = true
         } else if (p0 == PlayerStatus.STATE_ERROR) {
           sendEvent(mapOf("event" to "failedToLoad"))
         }
@@ -138,6 +167,7 @@ class VideoPlayer(val flutterPluginBinding: FlutterPlugin.FlutterPluginBinding, 
 
     player.addOnPlayingTimeChangeListener(object: OnPlayingTimeChangeListener {
       override fun onPlayingTimeChange(p0: Int, p1: Int) {
+        Log.i("Haijun1", p0.toString() + "," + p1.toString());
         val duration = p1 * 1000
         val position = p0 * 1000
         val buffered = (duration * (player.bufferPercentage.toDouble() / 100)).toInt()
@@ -149,14 +179,24 @@ class VideoPlayer(val flutterPluginBinding: FlutterPlugin.FlutterPluginBinding, 
         ))
       }
     })
+
+    player.addOnBufferUpdateListener(object: OnBufferedUpdateListener {
+      override fun onBufferedPercentageChange(p0: Int) {
+        Log.i("Haijun1", "onBufferedPercentageChange " + p0.toString());
+      }
+
+    })
   }
 
-  override fun getView(): View {
-    return playerView
+  fun createPlayerView(context: Context) {
+    platformView = VideoPlayerPlatformView(context)
+    player.bindPlayerView(platformView!!.playerView)
   }
 
-  override fun dispose() {
-    player.release()
+  private fun sendEventReadyIf() {
+//    if (!isReady || !isBuffered || sendReady) return
+//    sendEvent(mapOf("event" to "ready"))
+//    sendReady = true
   }
 
   private fun sendEvent(event: Map<Any, Any?>) {
@@ -170,7 +210,11 @@ class VideoPlayer(val flutterPluginBinding: FlutterPlugin.FlutterPluginBinding, 
   }
 
   fun play() {
-    player.play()
+    if (isStop) {
+      player.rePlay()
+    } else {
+      player.play()
+    }
   }
 
   fun pause() {

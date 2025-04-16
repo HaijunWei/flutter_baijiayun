@@ -46,7 +46,7 @@ class VideoPlayerController extends PlatformVideoPlayerController {
         );
       },
       onCreatePlatformView: (params) {
-        return PlatformViewsService.initAndroidView(
+        return PlatformViewsService.initSurfaceAndroidView(
           id: params.id,
           viewType: 'com.haijunwei.flutter/baijiayun_video_player',
           layoutDirection: TextDirection.ltr,

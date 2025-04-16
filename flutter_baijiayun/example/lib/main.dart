@@ -1,6 +1,9 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'package:flutter_baijiayun/flutter_baijiayun.dart';
+import 'package:provider/provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,6 +31,17 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final controller = VideoPlayerController();
+  bool _isFullscreen = false;
+  final List<DeviceOrientation> preferredDeviceOrientation = [
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ];
+  final List<DeviceOrientation> preferredDeviceOrientationFullscreen = [
+    DeviceOrientation.landscapeLeft,
+    DeviceOrientation.landscapeRight,
+  ];
+
+  final videoKey = GlobalKey();
 
   @override
   void initState() {
@@ -36,18 +50,160 @@ class _HomePageState extends State<HomePage> {
       print(controller.value);
     });
     controller.setOnlineVideo(
-      id: '300640151',
-      token: '1HESMHR94-7FbckRSbAqZyYRZOjsF88q1yJXKdiXZWDAUE3NDhIV_TG5JtrxIFp-',
-      position: const Duration(minutes: 50),
+      id: '300852684',
+      token: '2mTL4Jw709nFbckRSbAqZ92nuYlhGz1otveAFJcn0s44aYPNeoK15TG5JtrxIFp-',
+      position: const Duration(minutes: 99),
     );
+  }
+
+  void _setPreferredOrientation() {
+    if (_isFullscreen) {
+      SystemChrome.setPreferredOrientations(preferredDeviceOrientationFullscreen);
+    } else {
+      SystemChrome.setPreferredOrientations(preferredDeviceOrientation);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(),
-      body: VideoPlayerWidget(
-        controller: controller,
+      body: Column(
+        children: [
+          Row(
+            children: [
+              CupertinoButton(
+                child: Text('播放'),
+                onPressed: () {
+                  controller.play();
+                },
+              ),
+              CupertinoButton(
+                child: Text('暂停'),
+                onPressed: () {
+                  controller.pause();
+                },
+              ),
+              CupertinoButton(
+                child: Text('快进'),
+                onPressed: () {
+                  controller.seekTo(controller.value.position.inSeconds + 60);
+                },
+              ),
+              CupertinoButton(
+                child: Text('结束'),
+                onPressed: () {
+                  controller.stop();
+                },
+              ),
+              CupertinoButton(
+                child: const Text('全屏'),
+                onPressed: () async {
+                  _isFullscreen = true;
+                  setState(() {});
+                  _setPreferredOrientation();
+                  await VideoPage(
+                    controller: controller,
+                    videoKey: videoKey,
+                  ).show(context);
+                  _isFullscreen = false;
+                  setState(() {});
+                  _setPreferredOrientation();
+                },
+              ),
+            ],
+          ),
+          Expanded(
+            child: _isFullscreen
+                ? Container(
+                    color: Colors.red,
+                  )
+                : CustomVideoPlayerWidget(
+                    key: videoKey,
+                    controller: controller,
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class CustomVideoPlayerWidget extends StatelessWidget {
+  const CustomVideoPlayerWidget({
+    super.key,
+    required this.controller,
+  });
+
+  final VideoPlayerController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider.value(
+      value: controller,
+      child: Consumer<VideoPlayerController>(
+        builder: (context, controller, child) {
+          final isReady = context.select((VideoPlayerController controller) => controller.value.isReady);
+          return Stack(
+            children: [
+              VideoPlayerWidget(
+                controller: controller,
+              ),
+              if (!isReady)
+                const Positioned.fill(
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class VideoPage extends StatefulWidget {
+  const VideoPage({
+    super.key,
+    required this.controller,
+    required this.videoKey,
+  });
+
+  final VideoPlayerController controller;
+  final GlobalKey videoKey;
+
+  Future show(BuildContext context) {
+    return showGeneralDialog(
+      context: context,
+      pageBuilder: (context, animation, secondaryAnimation) => this,
+    );
+  }
+
+  @override
+  State<VideoPage> createState() => _VideoPageState();
+}
+
+class _VideoPageState extends State<VideoPage> {
+  bool _willPop = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return PopScope(
+      onPopInvoked: (didPop) {
+        if (didPop) return;
+        setState(() {
+          _willPop = true;
+        });
+        // 增加点延迟，GlobalKey同时存在多个会报错
+        Future.microtask(() => Navigator.of(context).pop());
+      },
+      canPop: false,
+      child: Scaffold(
+        body: _willPop
+            ? const SizedBox()
+            : CustomVideoPlayerWidget(
+                key: widget.videoKey,
+                controller: widget.controller,
+              ),
       ),
     );
   }
