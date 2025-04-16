@@ -63,17 +63,13 @@ class FlutterViewFactory: NSObject, FlutterPlatformViewFactory {
         self.instanceManager = instanceManager
     }
 
-    func create(withFrame frame: CGRect, viewIdentifier _: Int64, arguments args: Any?) -> any FlutterPlatformView {
+    func create(withFrame _: CGRect, viewIdentifier _: Int64, arguments args: Any?) -> any FlutterPlatformView {
         let identifier: Int64 = args is Int64 ? args as! Int64 : Int64(args as! Int32)
         let instance: AnyObject? = instanceManager.instance(forIdentifier: identifier)
-        if let instance = instance as? FlutterPlatformView {
-            instance.view().frame = frame
-            return instance
-        } else {
-            let view = instance as! UIView
-            view.frame = frame
-            return PlatformViewImpl(uiView: view)
+        if let instance = instance as? VideoPlayer {
+            return PlatformViewImpl(uiView: instance.manager.playerView!)
         }
+        return PlatformViewImpl(uiView: UIView())
     }
 
     func createArgsCodec() -> any FlutterMessageCodec & NSObjectProtocol {
@@ -111,7 +107,7 @@ public class FlutterBaijiayunPlugin: NSObject, FlutterPlugin, BaijiayunApi {
     }
 }
 
-class VideoPlayer: UIView {
+class VideoPlayer {
     private let playerType: VideoPlayerType
     private let pigeonApi: PigeonApiVideoPlayer
     let manager: BJVPlayerManager
@@ -120,7 +116,7 @@ class VideoPlayer: UIView {
     var durationObserver: NSKeyValueObservation?
     var currentTimeObserver: NSKeyValueObservation?
     var videoInfoObserver: NSKeyValueObservation?
-    
+
     var isStop = false
     var videoId: String?
     var videoToken: String?
@@ -128,15 +124,13 @@ class VideoPlayer: UIView {
     init(pigeonApi: PigeonApiVideoPlayer, playerType: VideoPlayerType) {
         self.playerType = playerType
         self.pigeonApi = pigeonApi
-        manager = BJVPlayerManager(playerType: .avPlayer)
-
-        super.init(frame: .zero)
-        if let e = manager.playerView {
-            addSubview(e)
+        let type: BJVPlayerType = switch playerType {
+        case .avPlayer: .avPlayer
+        case .ijkPlayer: .ijkPlayer
         }
+        manager = BJVPlayerManager(playerType: type)
 
         statusObserver = manager.observe(\.playStatus) { [weak self] manager, _ in
-            print("Haijun1 \(manager.playStatus.rawValue)")
             if manager.playStatus == .ready {
                 self?.sendEvent(["event": "ready"])
                 self?.isStop = false
@@ -170,16 +164,6 @@ class VideoPlayer: UIView {
             "position": Int(manager.currentTime * 1000),
             "buffered": Int(manager.cachedDuration * 1000),
         ])
-    }
-
-    @available(*, unavailable)
-    required init?(coder _: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        manager.playerView?.frame = bounds
     }
 
     private func sendEvent(_ event: [AnyHashable: Any]) {
