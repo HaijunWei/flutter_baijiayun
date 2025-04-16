@@ -12,21 +12,21 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_baijiayun_platform_interface:
-    # path: ../flutter_baijiayun_platform_interface
-    git:
-      url: "https://github.com/HaijunWei/flutter_baijiayun.git"
-      path: "flutter_baijiayun_platform_interface"
+    path: ../flutter_baijiayun_platform_interface
+    # git:
+    #   url: "https://github.com/HaijunWei/flutter_baijiayun.git"
+    #   path: "flutter_baijiayun_platform_interface"
   flutter_baijiayun_ios:
-    # path: ../flutter_baijiayun_ios
-    git:
-      url: "https://github.com/HaijunWei/flutter_baijiayun.git"
-      path: "flutter_baijiayun_ios"
+    path: ../flutter_baijiayun_ios
+    # git:
+    #   url: "https://github.com/HaijunWei/flutter_baijiayun.git"
+    #   path: "flutter_baijiayun_ios"
 
   flutter_baijiayun_android:
-    # path: ../flutter_baijiayun_android
-    git:
-      url: "https://github.com/HaijunWei/flutter_baijiayun.git"
-      path: "flutter_baijiayun_android"
+    path: ../flutter_baijiayun_android
+    # git:
+    #   url: "https://github.com/HaijunWei/flutter_baijiayun.git"
+    #   path: "flutter_baijiayun_android"
 
 dev_dependencies:
   flutter_test:

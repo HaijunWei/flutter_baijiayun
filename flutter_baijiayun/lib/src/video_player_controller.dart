@@ -8,7 +8,7 @@ class VideoPlayerValue {
   VideoPlayerValue({
     this.isPlaying = false,
     this.isStop = false,
-    this.isLoading = false,
+    this.isBuffering = false,
     this.isFailedToLoad = false,
     this.isReady = false,
     required this.duration,
@@ -32,8 +32,8 @@ class VideoPlayerValue {
   /// 视频已停止播放
   final bool isStop;
 
-  /// 是否加载中
-  final bool isLoading;
+  /// 是否缓冲中
+  final bool isBuffering;
 
   /// 是否加载/缓冲失败，已停止播放
   final bool isFailedToLoad;
@@ -50,7 +50,7 @@ class VideoPlayerValue {
   /// 视频缓冲长度
   final Duration buffered;
 
-  /// 视频分辨率，直播此值为zero
+  /// 视频分辨率
   final Size size;
 
   /// 播放速度
@@ -63,7 +63,7 @@ class VideoPlayerValue {
   VideoPlayerValue copyWith({
     bool? isPlaying,
     bool? isStop,
-    bool? isLoading,
+    bool? isBuffering,
     bool? isFailedToLoad,
     bool? isReady,
     Duration? duration,
@@ -76,7 +76,7 @@ class VideoPlayerValue {
     return VideoPlayerValue(
       isPlaying: isPlaying ?? this.isPlaying,
       isStop: isStop ?? this.isStop,
-      isLoading: isLoading ?? this.isLoading,
+      isBuffering: isBuffering ?? this.isBuffering,
       isFailedToLoad: isFailedToLoad ?? this.isFailedToLoad,
       isReady: isReady ?? this.isReady,
       duration: duration ?? this.duration,
@@ -90,7 +90,7 @@ class VideoPlayerValue {
 
   @override
   String toString() {
-    return 'VideoPlayerValue(isPlaying: $isPlaying, isStop: $isStop, isLoading: $isLoading, isFailedToLoad: $isFailedToLoad, isReady: $isReady, duration: $duration, position: $position, buffered: $buffered, size: $size, playbackSpeed: $playbackSpeed, errorDescription: $errorDescription)';
+    return 'VideoPlayerValue(isPlaying: $isPlaying, isStop: $isStop, isBuffering: $isBuffering, isFailedToLoad: $isFailedToLoad, isReady: $isReady, duration: $duration, position: $position, buffered: $buffered, size: $size, playbackSpeed: $playbackSpeed, errorDescription: $errorDescription)';
   }
 }
 
@@ -130,16 +130,17 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
         }
         value = value.copyWith(
           isReady: true,
-          isLoading: false,
+          isBuffering: false,
           isFailedToLoad: false,
         );
+        if (_autoPlay) await play();
         if (_initialPosition != null) {
-          // 不增加点延迟，可能设置不成功
-          Future.delayed(const Duration(milliseconds: 50), () {
-            if (!_isDisposed) seekTo(_initialPosition!.inSeconds);
-          });
+          seekTo(_initialPosition!.inSeconds);
+          // // 不增加点延迟，可能设置不成功
+          // Future.delayed(const Duration(milliseconds: 50), () {
+          //   if (!_isDisposed) seekTo(_initialPosition!.inSeconds);
+          // });
         }
-        if (_autoPlay) resume();
         break;
       case VideoEventType.resolutionUpdate:
         if (value.isStop) break;
@@ -153,6 +154,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
           duration: event.duration,
           position: event.position,
           buffered: event.buffered,
+          isBuffering: (event.buffered?.inMilliseconds ?? 0) == 0,
         );
         break;
       case VideoEventType.ended:
@@ -184,13 +186,17 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     value = value.copyWith(
       isReady: false,
       isStop: false,
-      isLoading: true,
+      isBuffering: true,
     );
     return platform.setOnlineVideo(id: id, token: token);
   }
 
-  Future<void> play() {
-    return platform.play();
+  Future<void> play() async {
+    await platform.play();
+    value = value.copyWith(
+      isPlaying: true,
+      isStop: false,
+    );
   }
 
   Future<void> replay() async {
@@ -200,14 +206,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     value = value.copyWith(
       isReady: false,
       isStop: false,
-      isLoading: true,
-    );
-  }
-
-  Future<void> resume() async {
-    await platform.play();
-    value = value.copyWith(
-      isPlaying: true,
+      isBuffering: true,
     );
   }
 
@@ -224,10 +223,12 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
       isStop: true,
       isPlaying: false,
       isReady: false,
+      buffered: Duration.zero,
     );
   }
 
   Future<void> seekTo(int position) {
+    print(Duration(seconds: position));
     value = value.copyWith(
       position: Duration(seconds: position),
     );
@@ -276,7 +277,7 @@ class _VideoAppLifeCycleObserver extends Object with WidgetsBindingObserver {
         break;
       case AppLifecycleState.resumed:
         if (_wasPlayingBeforePause) {
-          _controller.resume();
+          _controller.play();
         }
         break;
       default:

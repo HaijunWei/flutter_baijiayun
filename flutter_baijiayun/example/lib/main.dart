@@ -52,7 +52,7 @@ class _HomePageState extends State<HomePage> {
     controller.setOnlineVideo(
       id: '300852684',
       token: '2mTL4Jw709nFbckRSbAqZ92nuYlhGz1otveAFJcn0s44aYPNeoK15TG5JtrxIFp-',
-      position: const Duration(minutes: 99),
+      position: const Duration(minutes: 60),
     );
   }
 
@@ -85,9 +85,15 @@ class _HomePageState extends State<HomePage> {
                 },
               ),
               CupertinoButton(
+                child: Text('快退'),
+                onPressed: () {
+                  controller.seekTo(60);
+                },
+              ),
+              CupertinoButton(
                 child: Text('快进'),
                 onPressed: () {
-                  controller.seekTo(controller.value.position.inSeconds + 60);
+                  controller.seekTo(99 * 60);
                 },
               ),
               CupertinoButton(
@@ -115,9 +121,7 @@ class _HomePageState extends State<HomePage> {
           ),
           Expanded(
             child: _isFullscreen
-                ? Container(
-                    color: Colors.red,
-                  )
+                ? const SizedBox()
                 : CustomVideoPlayerWidget(
                     key: videoKey,
                     controller: controller,
@@ -143,13 +147,14 @@ class CustomVideoPlayerWidget extends StatelessWidget {
       value: controller,
       child: Consumer<VideoPlayerController>(
         builder: (context, controller, child) {
-          final isReady = context.select((VideoPlayerController controller) => controller.value.isReady);
+          final isLoading = context
+              .select((VideoPlayerController controller) => !controller.value.isReady || controller.value.isBuffering);
           return Stack(
             children: [
               VideoPlayerWidget(
                 controller: controller,
               ),
-              if (!isReady)
+              if (isLoading)
                 const Positioned.fill(
                   child: Center(child: CircularProgressIndicator()),
                 ),
@@ -197,13 +202,17 @@ class _VideoPageState extends State<VideoPage> {
         Future.microtask(() => Navigator.of(context).pop());
       },
       canPop: false,
-      child: Scaffold(
-        body: _willPop
-            ? const SizedBox()
-            : CustomVideoPlayerWidget(
-                key: widget.videoKey,
-                controller: widget.controller,
-              ),
+      child: GestureDetector(
+        onTap: () => Navigator.of(context).maybePop(),
+        behavior: HitTestBehavior.opaque,
+        child: Scaffold(
+          body: _willPop
+              ? const SizedBox()
+              : CustomVideoPlayerWidget(
+                  key: widget.videoKey,
+                  controller: widget.controller,
+                ),
+        ),
       ),
     );
   }

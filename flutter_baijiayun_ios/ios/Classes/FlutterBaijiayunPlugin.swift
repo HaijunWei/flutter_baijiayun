@@ -120,6 +120,10 @@ class VideoPlayer: UIView {
     var durationObserver: NSKeyValueObservation?
     var currentTimeObserver: NSKeyValueObservation?
     var videoInfoObserver: NSKeyValueObservation?
+    
+    var isStop = false
+    var videoId: String?
+    var videoToken: String?
 
     init(pigeonApi: PigeonApiVideoPlayer, playerType: VideoPlayerType) {
         self.playerType = playerType
@@ -132,10 +136,13 @@ class VideoPlayer: UIView {
         }
 
         statusObserver = manager.observe(\.playStatus) { [weak self] manager, _ in
+            print("Haijun1 \(manager.playStatus.rawValue)")
             if manager.playStatus == .ready {
                 self?.sendEvent(["event": "ready"])
+                self?.isStop = false
             } else if manager.playStatus == .reachEnd {
                 self?.sendEvent(["event": "ended"])
+                self?.isStop = true
             } else if manager.playStatus == .failed {
                 self?.sendEvent(["event": "failedToLoad"])
             }
@@ -183,11 +190,19 @@ class VideoPlayer: UIView {
     // MARK: -
 
     func setOnlineVideo(id: String, token: String) {
+        videoId = id
+        videoToken = token
         manager.setupOnlineVideo(withID: id, token: token)
     }
 
     func play() {
-        manager.play()
+        if isStop {
+            if let videoId, let videoToken {
+                setOnlineVideo(id: videoId, token: videoToken)
+            }
+        } else {
+            manager.play()
+        }
     }
 
     func pause() {
@@ -196,6 +211,7 @@ class VideoPlayer: UIView {
 
     func stop() {
         manager.reset()
+        isStop = true
     }
 
     func seekTo(position: Int64) {

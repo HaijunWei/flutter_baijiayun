@@ -31,9 +31,12 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
   Widget build(BuildContext context) {
     return Center(
       child: AspectRatio(
-        aspectRatio: _videoSize == Size.zero ? 1 : _videoSize.width / _videoSize.height,
-        child: IgnorePointer(
-          child: widget.controller.platform.build(context),
+        aspectRatio: _videoSize == Size.zero ? 16 / 9 : _videoSize.width / _videoSize.height,
+        child: Visibility.maintain(
+          visible: _videoSize != Size.zero,
+          child: IgnorePointer(
+            child: widget.controller.platform.build(context),
+          ),
         ),
       ),
     );

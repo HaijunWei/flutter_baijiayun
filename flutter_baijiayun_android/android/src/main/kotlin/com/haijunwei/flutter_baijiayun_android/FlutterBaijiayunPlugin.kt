@@ -144,11 +144,13 @@ class VideoPlayer(val flutterPluginBinding: FlutterPlugin.FlutterPluginBinding, 
       .setContext(flutterPluginBinding.applicationContext)
       .setSupportBreakPointPlay(false)
       .build()
+    player.setAutoPlay(false)
 
     player.addOnPlayerStatusChangeListener(object: OnPlayerStatusChangeListener {
       override fun onStatusChange(p0: PlayerStatus?) {
         Log.i("Haijun1", p0.toString())
         if (p0 == PlayerStatus.STATE_PREPARED) {
+          isStop = false
           sendEvent(mapOf("event" to "ready"))
           sendEvent(mapOf(
             "event" to "resolutionUpdate",
@@ -168,8 +170,8 @@ class VideoPlayer(val flutterPluginBinding: FlutterPlugin.FlutterPluginBinding, 
     player.addOnPlayingTimeChangeListener(object: OnPlayingTimeChangeListener {
       override fun onPlayingTimeChange(p0: Int, p1: Int) {
         Log.i("Haijun1", p0.toString() + "," + p1.toString());
-        val duration = p1 * 1000
-        val position = p0 * 1000
+        val duration = player.duration * 1000
+        val position = player.currentPosition * 1000
         val buffered = (duration * (player.bufferPercentage.toDouble() / 100)).toInt()
         sendEvent(mapOf(
           "event" to "progressUpdate",
@@ -182,7 +184,29 @@ class VideoPlayer(val flutterPluginBinding: FlutterPlugin.FlutterPluginBinding, 
 
     player.addOnBufferUpdateListener(object: OnBufferedUpdateListener {
       override fun onBufferedPercentageChange(p0: Int) {
-        Log.i("Haijun1", "onBufferedPercentageChange " + p0.toString());
+        Log.i("Haijun1", "onBufferedPercentageChange " + p0.toString())
+        val duration = player.duration * 1000
+        val position = player.currentPosition * 1000
+        val buffered = (duration * (player.bufferPercentage.toDouble() / 100)).toInt()
+        sendEvent(mapOf(
+          "event" to "progressUpdate",
+          "duration" to duration,
+          "position" to position,
+          "buffered" to buffered,
+        ))
+      }
+
+    })
+
+    player.addOnBufferingListener(object: OnBufferingListener {
+      override fun onBufferingStart() {
+        Log.i("Haijun1", "onBufferingStart")
+      }
+
+      override fun onBufferingEnd() {
+        Log.i("Haijun1", "onBufferingEnd")
+//        isBuffered = true
+//        sendEventReadyIf()
       }
 
     })
@@ -191,12 +215,6 @@ class VideoPlayer(val flutterPluginBinding: FlutterPlugin.FlutterPluginBinding, 
   fun createPlayerView(context: Context) {
     platformView = VideoPlayerPlatformView(context)
     player.bindPlayerView(platformView!!.playerView)
-  }
-
-  private fun sendEventReadyIf() {
-//    if (!isReady || !isBuffered || sendReady) return
-//    sendEvent(mapOf("event" to "ready"))
-//    sendReady = true
   }
 
   private fun sendEvent(event: Map<Any, Any?>) {
