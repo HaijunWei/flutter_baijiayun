@@ -14,6 +14,7 @@ abstract class VideoPlayer {
   void seekTo(int position);
   void setPlaybackSpeed(double speed);
   void setBackgroundPlay(bool backgroundPlay);
+  void dispose();
 
   late void Function(VideoPlayer player, Map event)? onEvent;
 }

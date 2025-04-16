@@ -49,6 +49,10 @@ abstract class PlatformVideoPlayerController extends PlatformInterface {
     throw UnimplementedError('setBackgroundPlay has not been implemented.');
   }
 
+  Future<void> dispose() {
+    throw UnimplementedError('dispose has not been implemented.');
+  }
+
   Stream<VideoEvent> videoEvents() {
     throw UnimplementedError('videoEvents has not been implemented.');
   }

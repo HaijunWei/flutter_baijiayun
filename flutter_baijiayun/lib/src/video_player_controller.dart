@@ -243,6 +243,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   Future<void> dispose() async {
     if (!_isDisposed) {
       _isDisposed = true;
+      await platform.dispose();
       await _eventSubscription?.cancel();
     }
     _lifeCycleObserver.dispose();

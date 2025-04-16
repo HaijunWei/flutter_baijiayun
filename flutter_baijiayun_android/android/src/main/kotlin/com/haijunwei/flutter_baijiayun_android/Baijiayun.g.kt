@@ -435,6 +435,8 @@ abstract class PigeonApiVideoPlayer(open val pigeonRegistrar: BaijiayunPigeonPro
 
   abstract fun setBackgroundPlay(pigeon_instance: VideoPlayer, backgroundPlay: Boolean)
 
+  abstract fun dispose(pigeon_instance: VideoPlayer)
+
   companion object {
     @Suppress("LocalVariableName")
     fun setUpMessageHandlers(binaryMessenger: BinaryMessenger, api: PigeonApiVideoPlayer?) {
@@ -578,6 +580,24 @@ abstract class PigeonApiVideoPlayer(open val pigeonRegistrar: BaijiayunPigeonPro
             val backgroundPlayArg = args[1] as Boolean
             val wrapped: List<Any?> = try {
               api.setBackgroundPlay(pigeon_instanceArg, backgroundPlayArg)
+              listOf(null)
+            } catch (exception: Throwable) {
+              wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.flutter_baijiayun_android.VideoPlayer.dispose", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val pigeon_instanceArg = args[0] as VideoPlayer
+            val wrapped: List<Any?> = try {
+              api.dispose(pigeon_instanceArg)
               listOf(null)
             } catch (exception: Throwable) {
               wrapError(exception)

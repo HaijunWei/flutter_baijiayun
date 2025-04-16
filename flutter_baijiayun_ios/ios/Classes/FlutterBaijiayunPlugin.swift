@@ -42,6 +42,10 @@ class VideoPlayerProxyAPIDelegate: PigeonApiDelegateVideoPlayer {
     func setBackgroundPlay(pigeonApi _: PigeonApiVideoPlayer, pigeonInstance: VideoPlayer, backgroundPlay: Bool) throws {
         pigeonInstance.setBackgroundPlay(backgroundPlay: backgroundPlay)
     }
+
+    func dispose(pigeonApi _: PigeonApiVideoPlayer, pigeonInstance: VideoPlayer) throws {
+        pigeonInstance.dispose()
+    }
 }
 
 class FlutterViewFactory: NSObject, FlutterPlatformViewFactory {
@@ -208,5 +212,9 @@ class VideoPlayer {
 
     func setBackgroundPlay(backgroundPlay: Bool) {
         manager.backgroundAudioEnabled = backgroundPlay
+    }
+
+    func dispose() {
+        manager.destroy()
     }
 }

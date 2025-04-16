@@ -532,6 +532,7 @@ protocol PigeonApiDelegateVideoPlayer {
   func seekTo(pigeonApi: PigeonApiVideoPlayer, pigeonInstance: VideoPlayer, position: Int64) throws
   func setPlaybackSpeed(pigeonApi: PigeonApiVideoPlayer, pigeonInstance: VideoPlayer, speed: Double) throws
   func setBackgroundPlay(pigeonApi: PigeonApiVideoPlayer, pigeonInstance: VideoPlayer, backgroundPlay: Bool) throws
+  func dispose(pigeonApi: PigeonApiVideoPlayer, pigeonInstance: VideoPlayer) throws
 }
 
 protocol PigeonApiProtocolVideoPlayer {
@@ -678,6 +679,21 @@ withIdentifier: pigeonIdentifierArg)
       }
     } else {
       setBackgroundPlayChannel.setMessageHandler(nil)
+    }
+    let disposeChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flutter_baijiayun_ios.VideoPlayer.dispose", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      disposeChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let pigeonInstanceArg = args[0] as! VideoPlayer
+        do {
+          try api.pigeonDelegate.dispose(pigeonApi: api, pigeonInstance: pigeonInstanceArg)
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      disposeChannel.setMessageHandler(nil)
     }
   }
 

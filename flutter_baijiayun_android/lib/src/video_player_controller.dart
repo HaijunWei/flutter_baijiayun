@@ -98,6 +98,11 @@ class VideoPlayerController extends PlatformVideoPlayerController {
   }
 
   @override
+  Future<void> dispose() {
+    return _player.dispose();
+  }
+
+  @override
   Stream<VideoEvent> videoEvents() {
     return _eventController.stream;
   }

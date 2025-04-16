@@ -114,6 +114,9 @@ class VideoPlayerProxyAPIDelegate(val flutterPluginBinding: FlutterPlugin.Flutte
     pigeon_instance.setBackgroundPlay(backgroundPlay)
   }
 
+  override fun dispose(pigeon_instance: VideoPlayer) {
+    pigeon_instance.dispose()
+  }
 }
 
 
@@ -195,20 +198,6 @@ class VideoPlayer(val flutterPluginBinding: FlutterPlugin.FlutterPluginBinding, 
           "buffered" to buffered,
         ))
       }
-
-    })
-
-    player.addOnBufferingListener(object: OnBufferingListener {
-      override fun onBufferingStart() {
-        Log.i("Haijun1", "onBufferingStart")
-      }
-
-      override fun onBufferingEnd() {
-        Log.i("Haijun1", "onBufferingEnd")
-//        isBuffered = true
-//        sendEventReadyIf()
-      }
-
     })
   }
 
@@ -254,5 +243,9 @@ class VideoPlayer(val flutterPluginBinding: FlutterPlugin.FlutterPluginBinding, 
 
   fun setBackgroundPlay(backgroundPlay: Boolean) {
     player.supportBackgroundAudio(backgroundPlay)
+  }
+
+  fun dispose() {
+    player.release()
   }
 }
