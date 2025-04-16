@@ -70,7 +70,7 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(),
       body: Column(
         children: [
-          Row(
+          Wrap(
             children: [
               CupertinoButton(
                 child: Text('播放'),
@@ -82,6 +82,12 @@ class _HomePageState extends State<HomePage> {
                 child: Text('暂停'),
                 onPressed: () {
                   controller.pause();
+                },
+              ),
+              CupertinoButton(
+                child: Text('倍速'),
+                onPressed: () {
+                  controller.setPlaybackSpeed(2);
                 },
               ),
               CupertinoButton(
