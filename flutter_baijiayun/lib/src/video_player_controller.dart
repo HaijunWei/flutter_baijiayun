@@ -123,11 +123,6 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
 
     switch (event.eventType) {
       case VideoEventType.ready:
-        // 卡顿后恢复播放也会调用此消息
-        if (value.isReady) {
-          value = value.copyWith(isFailedToLoad: false);
-          break;
-        }
         value = value.copyWith(
           isReady: true,
           isBuffering: false,
@@ -228,7 +223,6 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   }
 
   Future<void> seekTo(int position) {
-    print(Duration(seconds: position));
     value = value.copyWith(
       position: Duration(seconds: position),
     );
