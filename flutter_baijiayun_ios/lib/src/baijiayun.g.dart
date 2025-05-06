@@ -1090,6 +1090,7 @@ class VideoDownloadManager extends PigeonInternalProxyApiBaseClass {
   Future<void> startDownload(
     String videoId,
     String token,
+    String title,
     bool encrypted,
   ) async {
     final _PigeonInternalProxyApiBaseCodec pigeonChannelCodec =
@@ -1104,7 +1105,8 @@ class VideoDownloadManager extends PigeonInternalProxyApiBaseClass {
       binaryMessenger: pigeonVar_binaryMessenger,
     );
     final List<Object?>? pigeonVar_replyList = await pigeonVar_channel
-        .send(<Object?>[this, videoId, token, encrypted]) as List<Object?>?;
+            .send(<Object?>[this, videoId, token, title, encrypted])
+        as List<Object?>?;
     if (pigeonVar_replyList == null) {
       throw _createConnectionError(pigeonVar_channelName);
     } else if (pigeonVar_replyList.length > 1) {

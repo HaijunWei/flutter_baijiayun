@@ -24,7 +24,12 @@ abstract class PlatformVideoDownloadManager extends PlatformInterface {
     _instance = instance;
   }
 
-  Future<void> startDownload({required String videoId, required String token, required bool encrypted}) {
+  Future<void> startDownload({
+    required String videoId,
+    required String token,
+    required String title,
+    required bool encrypted,
+  }) {
     throw UnimplementedError('startDownload has not been implemented.');
   }
 

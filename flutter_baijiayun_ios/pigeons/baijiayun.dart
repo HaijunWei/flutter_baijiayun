@@ -29,7 +29,7 @@ abstract class BaijiayunApi {
 abstract class VideoDownloadManager {
   VideoDownloadManager();
 
-  void startDownload(String videoId, String token, bool encrypted);
+  void startDownload(String videoId, String token, String title, bool encrypted);
   void stopDownload(String videoId);
   void pauseDownload(String videoId);
   void resumeDownload(String videoId);

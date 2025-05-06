@@ -1,25 +1,26 @@
 package com.haijunwei.flutter_baijiayun_android
 
 import android.content.Context
-import android.util.Log
 import android.view.View
-import android.view.ViewGroup
+import com.baijiahulian.common.networkv2.HttpException
 import com.baijiayun.BJYPlayerSDK
+import com.baijiayun.download.DownloadListener
+import com.baijiayun.download.DownloadManager
+import com.baijiayun.download.DownloadTask
+import com.baijiayun.download.constant.TaskStatus
 import com.baijiayun.videoplayer.IBJYVideoPlayer
 import com.baijiayun.videoplayer.VideoPlayerFactory
 import com.baijiayun.videoplayer.listeners.OnBufferedUpdateListener
-import com.baijiayun.videoplayer.listeners.OnBufferingListener
 import com.baijiayun.videoplayer.listeners.OnPlayerStatusChangeListener
 import com.baijiayun.videoplayer.listeners.OnPlayingTimeChangeListener
 import com.baijiayun.videoplayer.player.PlayerStatus
-import com.baijiayun.videoplayer.render.AspectRatio
 import com.baijiayun.videoplayer.widget.BJYPlayerView
-
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.StandardMessageCodec
 import io.flutter.plugin.platform.PlatformView
 import io.flutter.plugin.platform.PlatformViewFactory
-import java.util.logging.Logger
+import io.reactivex.android.schedulers.AndroidSchedulers
+
 
 /** FlutterBaijiayunAndroidPlugin */
 class FlutterBaijiayunPlugin: FlutterPlugin, BaijiayunApi {
@@ -65,9 +66,6 @@ class FlutterViewFactory(val instanceManager: BaijiayunPigeonInstanceManager): P
     if (instance is VideoPlayer) {
       instance.createPlayerView(context!!)
       return instance.platformView!!
-//      val parent = instance.platformView.view.parent as? ViewGroup
-//      parent?.removeView(instance.platformView.view)
-//      return instance.platformView
     }
     throw IllegalStateException("Unable to find a PlatformView or View instance: $args, $instance")
   }
@@ -78,6 +76,10 @@ class ProxyAPIRegistrar(val flutterPluginBinding: FlutterPlugin.FlutterPluginBin
 
   override fun getPigeonApiVideoPlayer(): PigeonApiVideoPlayer {
     return VideoPlayerProxyAPIDelegate(flutterPluginBinding, this)
+  }
+
+  override fun getPigeonApiVideoDownloadManager(): PigeonApiVideoDownloadManager {
+    return VideoDownloadManagerApiDelegate(flutterPluginBinding, this)
   }
 }
 
@@ -119,6 +121,37 @@ class VideoPlayerProxyAPIDelegate(val flutterPluginBinding: FlutterPlugin.Flutte
   }
 }
 
+class VideoDownloadManagerApiDelegate(val flutterPluginBinding: FlutterPlugin.FlutterPluginBinding, pigeonRegistrar: BaijiayunPigeonProxyApiRegistrar): PigeonApiVideoDownloadManager(pigeonRegistrar) {
+  override fun pigeon_defaultConstructor(): VideoDownloadManager {
+    return VideoDownloadManager(flutterPluginBinding, this)
+  }
+
+  override fun startDownload(
+    pigeon_instance: VideoDownloadManager,
+    videoId: String,
+    token: String,
+    title: String,
+    encrypted: Boolean
+  ) {
+    pigeon_instance.startDownload(videoId, token, title, encrypted)
+  }
+
+  override fun stopDownload(pigeon_instance: VideoDownloadManager, videoId: String) {
+    pigeon_instance.stopDownload(videoId)
+  }
+
+  override fun pauseDownload(pigeon_instance: VideoDownloadManager, videoId: String) {
+    pigeon_instance.pauseDownload(videoId)
+  }
+
+  override fun resumeDownload(pigeon_instance: VideoDownloadManager, videoId: String) {
+    pigeon_instance.resumeDownload(videoId)
+  }
+
+  override fun getDownloadList(pigeon_instance: VideoDownloadManager): List<DownloadItem> {
+    return pigeon_instance.getDownloadList()
+  }
+}
 
 class VideoPlayerPlatformView(val context: Context): PlatformView {
   val playerView: BJYPlayerView
@@ -151,7 +184,6 @@ class VideoPlayer(val flutterPluginBinding: FlutterPlugin.FlutterPluginBinding, 
 
     player.addOnPlayerStatusChangeListener(object: OnPlayerStatusChangeListener {
       override fun onStatusChange(p0: PlayerStatus?) {
-        Log.i("Haijun1", p0.toString())
         if (p0 == PlayerStatus.STATE_PREPARED) {
           isStop = false
           sendEvent(mapOf("event" to "ready"))
@@ -172,7 +204,6 @@ class VideoPlayer(val flutterPluginBinding: FlutterPlugin.FlutterPluginBinding, 
 
     player.addOnPlayingTimeChangeListener(object: OnPlayingTimeChangeListener {
       override fun onPlayingTimeChange(p0: Int, p1: Int) {
-        Log.i("Haijun1", p0.toString() + "," + p1.toString());
         val duration = player.duration * 1000
         val position = player.currentPosition * 1000
         val buffered = (duration * (player.bufferPercentage.toDouble() / 100)).toInt()
@@ -187,7 +218,6 @@ class VideoPlayer(val flutterPluginBinding: FlutterPlugin.FlutterPluginBinding, 
 
     player.addOnBufferUpdateListener(object: OnBufferedUpdateListener {
       override fun onBufferedPercentageChange(p0: Int) {
-        Log.i("Haijun1", "onBufferedPercentageChange " + p0.toString())
         val duration = player.duration * 1000
         val position = player.currentPosition * 1000
         val buffered = (duration * (player.bufferPercentage.toDouble() / 100)).toInt()
@@ -247,5 +277,125 @@ class VideoPlayer(val flutterPluginBinding: FlutterPlugin.FlutterPluginBinding, 
 
   fun dispose() {
     player.release()
+  }
+}
+
+class VideoDownloadManager(val flutterPluginBinding: FlutterPlugin.FlutterPluginBinding, val pigeonApi: PigeonApiVideoDownloadManager) {
+  private var manager: DownloadManager = DownloadManager.getInstance(flutterPluginBinding.applicationContext)
+  private val downloadDisposables = HashMap<String, io.reactivex.disposables.Disposable>()
+  
+  init {
+    manager.targetFolder = flutterPluginBinding.applicationContext.getExternalFilesDir(null)!!.absolutePath + "/bjy_video_downloaded/"
+    manager.loadDownloadInfo()
+  }
+
+  fun startDownload(videoId: String, token: String, title: String, encrypted: Boolean) {
+    stopExistingTask(videoId)
+    val task = manager.getTaskByVideoId(videoId.toLong())
+    if (task != null) {
+      task.cancel()
+      manager.deleteTask(task)
+    }
+
+    val disposable = manager.newVideoDownloadTask("video", videoId.toLong(), token, title)
+        .observeOn(AndroidSchedulers.mainThread())
+        .subscribe {
+          it.setDownloadListener(object : DownloadListener {
+            override fun onProgress(p0: DownloadTask?) {
+              p0?.let { task -> sendEvent(task) }
+            }
+
+            override fun onError(p0: DownloadTask?, p1: HttpException?) {
+              downloadDisposables.remove(videoId)
+              p0?.let { task -> sendEvent(task) }
+            }
+
+            override fun onPaused(p0: DownloadTask?) {
+              p0?.let { task -> sendEvent(task) }
+            }
+
+            override fun onStarted(p0: DownloadTask?) {
+              p0?.let { task -> sendEvent(task) }
+            }
+
+            override fun onFinish(p0: DownloadTask?) {
+              downloadDisposables.remove(videoId)
+              p0?.let { task -> sendEvent(task) }
+            }
+
+            override fun onDeleted(p0: DownloadTask?) {
+              downloadDisposables.remove(videoId)
+              p0?.let { task -> sendEvent(task) }
+            }
+          })
+          it.start()
+        }
+    
+    downloadDisposables[videoId] = disposable
+  }
+
+  private fun stopExistingTask(videoId: String) {
+    downloadDisposables[videoId]?.let { disposable ->
+      if (!disposable.isDisposed) {
+        disposable.dispose()
+      }
+      downloadDisposables.remove(videoId)
+    }
+  }
+
+  fun stopDownload(videoId: String) {
+    stopExistingTask(videoId)
+    val task = manager.getTaskByVideoId(videoId.toLong())
+    if (task != null) {
+      task.cancel()
+      manager.deleteTask(task)
+    }
+  }
+
+  fun pauseDownload(videoId: String) {
+    manager.getTaskByVideoId(videoId.toLong()).pause()
+  }
+
+  fun resumeDownload(videoId: String) {
+    manager.getTaskByVideoId(videoId.toLong()).start()
+  }
+
+  fun getDownloadList(): List<DownloadItem> {
+    val tasks = manager.allTasks ?: emptyList()
+    return tasks.map { task ->
+      val state = when (task.taskStatus) {
+        TaskStatus.Downloading -> 0
+        TaskStatus.Pause -> 1
+        TaskStatus.Finish -> 2
+        else -> -1
+      }
+      DownloadItem(
+        task.videoDownloadInfo.videoId.toString(),
+        task.videoDownloadInfo.extraInfo,
+        state.toLong(),
+        task.totalLength,
+        (task.progress / 100.0).toDouble(),
+      )
+    }
+  }
+
+  private fun sendEvent(task: DownloadTask) {
+    val state = when (task.taskStatus) {
+      TaskStatus.Downloading -> 0
+      TaskStatus.Pause -> 1
+      TaskStatus.Finish -> 2
+      else -> -1
+    }
+    
+    val eventMap = mapOf<Any, Any>(
+      "videoId" to task.videoDownloadInfo.videoId.toString(),
+      "title" to (task.videoDownloadInfo.extraInfo ?: ""),
+      "progress" to task.progress.toDouble(),
+      "state" to state,
+      "totalSize" to task.totalLength
+    )
+    
+    pigeonApi.onDownloadStateChagned(this, this, eventMap) {
+    }
   }
 }

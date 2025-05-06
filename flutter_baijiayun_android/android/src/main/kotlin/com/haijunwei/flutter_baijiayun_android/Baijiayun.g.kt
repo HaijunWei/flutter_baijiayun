@@ -370,13 +370,21 @@ abstract class BaijiayunPigeonProxyApiRegistrar(val binaryMessenger: BinaryMesse
    */
   abstract fun getPigeonApiVideoPlayer(): PigeonApiVideoPlayer
 
+  /**
+   * An implementation of [PigeonApiVideoDownloadManager] used to add a new Dart instance of
+   * `VideoDownloadManager` to the Dart `InstanceManager`.
+   */
+  abstract fun getPigeonApiVideoDownloadManager(): PigeonApiVideoDownloadManager
+
   fun setUp() {
     BaijiayunPigeonInstanceManagerApi.setUpMessageHandlers(binaryMessenger, instanceManager)
     PigeonApiVideoPlayer.setUpMessageHandlers(binaryMessenger, getPigeonApiVideoPlayer())
+    PigeonApiVideoDownloadManager.setUpMessageHandlers(binaryMessenger, getPigeonApiVideoDownloadManager())
   }
   fun tearDown() {
     BaijiayunPigeonInstanceManagerApi.setUpMessageHandlers(binaryMessenger, null)
     PigeonApiVideoPlayer.setUpMessageHandlers(binaryMessenger, null)
+    PigeonApiVideoDownloadManager.setUpMessageHandlers(binaryMessenger, null)
   }
 }
 private class BaijiayunPigeonProxyApiBaseCodec(val registrar: BaijiayunPigeonProxyApiRegistrar) : BaijiayunPigeonCodec() {
@@ -398,6 +406,9 @@ private class BaijiayunPigeonProxyApiBaseCodec(val registrar: BaijiayunPigeonPro
     if (value is VideoPlayer) {
       registrar.getPigeonApiVideoPlayer().pigeon_newInstance(value) { }
     }
+     else if (value is VideoDownloadManager) {
+      registrar.getPigeonApiVideoDownloadManager().pigeon_newInstance(value) { }
+    }
 
     when {
       registrar.instanceManager.containsInstance(value) -> {
@@ -408,12 +419,55 @@ private class BaijiayunPigeonProxyApiBaseCodec(val registrar: BaijiayunPigeonPro
     }
   }
 }
+
+/** Generated class from Pigeon that represents data sent in messages. */
+data class DownloadItem (
+  val videoId: String,
+  val title: String,
+  val state: Long,
+  val totalSize: Long,
+  val progress: Double
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): DownloadItem {
+      val videoId = pigeonVar_list[0] as String
+      val title = pigeonVar_list[1] as String
+      val state = pigeonVar_list[2] as Long
+      val totalSize = pigeonVar_list[3] as Long
+      val progress = pigeonVar_list[4] as Double
+      return DownloadItem(videoId, title, state, totalSize, progress)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      videoId,
+      title,
+      state,
+      totalSize,
+      progress,
+    )
+  }
+}
 private open class BaijiayunPigeonCodec : StandardMessageCodec() {
   override fun readValueOfType(type: Byte, buffer: ByteBuffer): Any? {
-    return     super.readValueOfType(type, buffer)
+    return when (type) {
+      129.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          DownloadItem.fromList(it)
+        }
+      }
+      else -> super.readValueOfType(type, buffer)
+    }
   }
   override fun writeValue(stream: ByteArrayOutputStream, value: Any?)   {
-    super.writeValue(stream, value)
+    when (value) {
+      is DownloadItem -> {
+        stream.write(129)
+        writeValue(stream, value.toList())
+      }
+      else -> super.writeValue(stream, value)
+    }
   }
 }
 
@@ -719,4 +773,197 @@ interface BaijiayunApi {
       }
     }
   }
+}
+@Suppress("UNCHECKED_CAST")
+abstract class PigeonApiVideoDownloadManager(open val pigeonRegistrar: BaijiayunPigeonProxyApiRegistrar) {
+  abstract fun pigeon_defaultConstructor(): VideoDownloadManager
+
+  abstract fun startDownload(pigeon_instance: VideoDownloadManager, videoId: String, token: String, title: String, encrypted: Boolean)
+
+  abstract fun stopDownload(pigeon_instance: VideoDownloadManager, videoId: String)
+
+  abstract fun pauseDownload(pigeon_instance: VideoDownloadManager, videoId: String)
+
+  abstract fun resumeDownload(pigeon_instance: VideoDownloadManager, videoId: String)
+
+  abstract fun getDownloadList(pigeon_instance: VideoDownloadManager): List<DownloadItem>
+
+  companion object {
+    @Suppress("LocalVariableName")
+    fun setUpMessageHandlers(binaryMessenger: BinaryMessenger, api: PigeonApiVideoDownloadManager?) {
+      val codec = api?.pigeonRegistrar?.codec ?: BaijiayunPigeonCodec()
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.flutter_baijiayun_android.VideoDownloadManager.pigeon_defaultConstructor", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val pigeon_identifierArg = args[0] as Long
+            val wrapped: List<Any?> = try {
+              api.pigeonRegistrar.instanceManager.addDartCreatedInstance(api.pigeon_defaultConstructor(), pigeon_identifierArg)
+              listOf(null)
+            } catch (exception: Throwable) {
+              wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.flutter_baijiayun_android.VideoDownloadManager.startDownload", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val pigeon_instanceArg = args[0] as VideoDownloadManager
+            val videoIdArg = args[1] as String
+            val tokenArg = args[2] as String
+            val titleArg = args[3] as String
+            val encryptedArg = args[4] as Boolean
+            val wrapped: List<Any?> = try {
+              api.startDownload(pigeon_instanceArg, videoIdArg, tokenArg, titleArg, encryptedArg)
+              listOf(null)
+            } catch (exception: Throwable) {
+              wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.flutter_baijiayun_android.VideoDownloadManager.stopDownload", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val pigeon_instanceArg = args[0] as VideoDownloadManager
+            val videoIdArg = args[1] as String
+            val wrapped: List<Any?> = try {
+              api.stopDownload(pigeon_instanceArg, videoIdArg)
+              listOf(null)
+            } catch (exception: Throwable) {
+              wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.flutter_baijiayun_android.VideoDownloadManager.pauseDownload", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val pigeon_instanceArg = args[0] as VideoDownloadManager
+            val videoIdArg = args[1] as String
+            val wrapped: List<Any?> = try {
+              api.pauseDownload(pigeon_instanceArg, videoIdArg)
+              listOf(null)
+            } catch (exception: Throwable) {
+              wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.flutter_baijiayun_android.VideoDownloadManager.resumeDownload", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val pigeon_instanceArg = args[0] as VideoDownloadManager
+            val videoIdArg = args[1] as String
+            val wrapped: List<Any?> = try {
+              api.resumeDownload(pigeon_instanceArg, videoIdArg)
+              listOf(null)
+            } catch (exception: Throwable) {
+              wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.flutter_baijiayun_android.VideoDownloadManager.getDownloadList", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val pigeon_instanceArg = args[0] as VideoDownloadManager
+            val wrapped: List<Any?> = try {
+              listOf(api.getDownloadList(pigeon_instanceArg))
+            } catch (exception: Throwable) {
+              wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+    }
+  }
+
+  @Suppress("LocalVariableName", "FunctionName")
+  /** Creates a Dart instance of VideoDownloadManager and attaches it to [pigeon_instanceArg]. */
+  fun pigeon_newInstance(pigeon_instanceArg: VideoDownloadManager, callback: (Result<Unit>) -> Unit)
+{
+    if (pigeonRegistrar.ignoreCallsToDart) {
+      callback(
+          Result.failure(
+              BaijiayunError("ignore-calls-error", "Calls to Dart are being ignored.", "")))
+      return
+    }
+    if (pigeonRegistrar.instanceManager.containsInstance(pigeon_instanceArg)) {
+      Result.success(Unit)
+      return
+    }
+    val pigeon_identifierArg = pigeonRegistrar.instanceManager.addHostCreatedInstance(pigeon_instanceArg)
+    val binaryMessenger = pigeonRegistrar.binaryMessenger
+    val codec = pigeonRegistrar.codec
+    val channelName = "dev.flutter.pigeon.flutter_baijiayun_android.VideoDownloadManager.pigeon_newInstance"
+    val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
+    channel.send(listOf(pigeon_identifierArg)) {
+      if (it is List<*>) {
+        if (it.size > 1) {
+          callback(Result.failure(BaijiayunError(it[0] as String, it[1] as String, it[2] as String?)))
+        } else {
+          callback(Result.success(Unit))
+        }
+      } else {
+        callback(Result.failure(createConnectionError(channelName)))
+      } 
+    }
+  }
+
+  fun onDownloadStateChagned(pigeon_instanceArg: VideoDownloadManager, playerArg: VideoDownloadManager, infoArg: Map<Any, Any?>, callback: (Result<Unit>) -> Unit)
+{
+    if (pigeonRegistrar.ignoreCallsToDart) {
+      callback(
+          Result.failure(
+              BaijiayunError("ignore-calls-error", "Calls to Dart are being ignored.", "")))
+      return
+    }
+    val binaryMessenger = pigeonRegistrar.binaryMessenger
+    val codec = pigeonRegistrar.codec
+    val channelName = "dev.flutter.pigeon.flutter_baijiayun_android.VideoDownloadManager.onDownloadStateChagned"
+    val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
+    channel.send(listOf(pigeon_instanceArg, playerArg, infoArg)) {
+      if (it is List<*>) {
+        if (it.size > 1) {
+          callback(Result.failure(BaijiayunError(it[0] as String, it[1] as String, it[2] as String?)))
+        } else {
+          callback(Result.success(Unit))
+        }
+      } else {
+        callback(Result.failure(createConnectionError(channelName)))
+      } 
+    }
+  }
+
 }

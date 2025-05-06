@@ -7,8 +7,13 @@ class VideoDownloadManager {
 
   Stream<DownloadModel> get stateChanged => platform.stateChanged();
 
-  Future<void> startDownload({required String videoId, required String token, bool encrypted = false}) {
-    return platform.startDownload(videoId: videoId, token: token, encrypted: encrypted);
+  Future<void> startDownload({
+    required String videoId,
+    required String token,
+    required String title,
+    bool encrypted = false,
+  }) {
+    return platform.startDownload(videoId: videoId, token: token, title: title, encrypted: encrypted);
   }
 
   Future<void> stopDownload(String videoId) {

@@ -57,8 +57,8 @@ class VideoDownloadManagerApiDelegate: PigeonApiDelegateVideoDownloadManager {
         return VideoDownloadManager(pigeonApi: pigeonApi)
     }
 
-    func startDownload(pigeonApi _: PigeonApiVideoDownloadManager, pigeonInstance: VideoDownloadManager, videoId: String, token: String, encrypted: Bool) throws {
-        pigeonInstance.startDownload(videoId: videoId, token: token, encrypted: encrypted)
+    func startDownload(pigeonApi _: PigeonApiVideoDownloadManager, pigeonInstance: VideoDownloadManager, videoId: String, token: String, title: String,  encrypted: Bool) throws {
+        pigeonInstance.startDownload(videoId: videoId, token: token, title: title, encrypted: encrypted)
     }
 
     func stopDownload(pigeonApi _: PigeonApiVideoDownloadManager, pigeonInstance: VideoDownloadManager, videoId: String) throws {
@@ -264,10 +264,12 @@ class VideoDownloadManager: NSObject, BJLDownloadManagerDelegate, BJVRequestToke
         launchTimerIf()
     }
 
-    func startDownload(videoId: String, token: String, encrypted: Bool) {
+    func startDownload(videoId: String, token: String, title: String, encrypted: Bool) {
         downloadTokens[videoId] = token
         saveTokens()
-        var item = manager.addDownloadItem(withVideoID: videoId, encrypted: encrypted, preferredDefinitionList: nil)
+        var item = manager.addDownloadItem(withVideoID: videoId, encrypted: encrypted, preferredDefinitionList: nil, setting: {
+            $0.userInfo = ["title": title]
+        })
         if item == nil { item = manager.downloadItem(withVideoID: videoId) }
         item?.resume()
         launchTimerIf()
@@ -315,15 +317,7 @@ class VideoDownloadManager: NSObject, BJLDownloadManagerDelegate, BJVRequestToke
             downloadTokens[item.videoID ?? ""] = nil
             saveTokens()
         }
-        let info: [String: Any] = [
-            "videoId": item.videoID ?? "",
-            "title": item.playInfo?.title ?? "",
-            "state": item.error != nil ? -1 : item.state.rawValue,
-            "progress": item.progress.fractionCompleted,
-            "totalSize": item.totalSize,
-        ]
-        pigeonApi.onDownloadStateChagned(pigeonInstance: self, player: self, info: info) { _ in
-        }
+        sendEvent(task: item)
 
         releaseTimerIf()
         launchTimerIf()
@@ -339,35 +333,25 @@ class VideoDownloadManager: NSObject, BJLDownloadManagerDelegate, BJVRequestToke
         if timer != nil { return }
         let validItems = manager.downloadItems(withStatesArray: [NSNumber(value: 0), NSNumber(value: 3)]) ?? []
         if validItems.count == 0 { return }
-        var oldItems = getDownloadList()
+        var oldItems = manager.downloadItems.compactMap { $0 as? BJVDownloadItem }.map {
+            (id: $0.videoID ?? "", state: $0.state, progress: $0.progress.fractionCompleted)
+        }
         timer = Timer(timeInterval: 1, repeats: true, block: { [weak self] _ in
             guard let `self` else { return }
-            for downloadItem in manager.downloadItems {
-                print("Haijun \(downloadItem) \(downloadItem.progress.fractionCompleted)")
-            }
-            let newItems = getDownloadList()
+            let newItems = manager.downloadItems.compactMap { $0 as? BJVDownloadItem }
             for item in newItems {
-                let sendEvent = {
-                    let info: [String: Any] = [
-                        "videoId": item.videoId,
-                        "title": item.title,
-                        "state": item.state,
-                        "progress": item.progress,
-                        "totalSize": item.totalSize,
-                    ]
-                    self.pigeonApi.onDownloadStateChagned(pigeonInstance: self, player: self, info: info) { _ in
-                    }
-                }
-                if let e = oldItems.first(where: { $0.videoId == item.videoId }) {
-                    if e.progress != item.progress || e.state != item.state {
-                        sendEvent()
+                if let e = oldItems.first(where: { $0.id == item.videoID }) {
+                    if e.progress != item.progress.fractionCompleted || e.state != item.state {
+                        sendEvent(task: item)
                     }
                 } else {
-                    sendEvent()
+                    sendEvent(task: item)
                 }
             }
             releaseTimerIf()
-            oldItems = newItems
+            oldItems = newItems.map {
+                (id: $0.videoID ?? "", state: $0.state, progress: $0.progress.fractionCompleted)
+            }
         })
         RunLoop.main.add(timer!, forMode: .common)
     }
@@ -394,6 +378,18 @@ class VideoDownloadManager: NSObject, BJLDownloadManagerDelegate, BJVRequestToke
         let filePath = documentDir + "/bjy_download"
         if let data = FileManager.default.contents(atPath: filePath) {
             downloadTokens = ((try? JSONSerialization.jsonObject(with: data)) as? [String: String]) ?? [:]
+        }
+    }
+    
+    private func sendEvent(task: BJVDownloadItem) {
+        let info: [String: Any] = [
+            "videoId": task.videoID ?? "",
+            "title": task.userInfo?["title"] as? String ?? "",
+            "state": task.error != nil ? -1 : Int64(task.state.rawValue),
+            "progress": task.progress.fractionCompleted,
+            "totalSize": task.totalSize,
+        ]
+        self.pigeonApi.onDownloadStateChagned(pigeonInstance: self, player: self, info: info) { _ in
         }
     }
 }

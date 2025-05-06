@@ -862,7 +862,7 @@ class BaijiayunApiSetup {
 }
 protocol PigeonApiDelegateVideoDownloadManager {
   func pigeonDefaultConstructor(pigeonApi: PigeonApiVideoDownloadManager) throws -> VideoDownloadManager
-  func startDownload(pigeonApi: PigeonApiVideoDownloadManager, pigeonInstance: VideoDownloadManager, videoId: String, token: String, encrypted: Bool) throws
+  func startDownload(pigeonApi: PigeonApiVideoDownloadManager, pigeonInstance: VideoDownloadManager, videoId: String, token: String, title: String, encrypted: Bool) throws
   func stopDownload(pigeonApi: PigeonApiVideoDownloadManager, pigeonInstance: VideoDownloadManager, videoId: String) throws
   func pauseDownload(pigeonApi: PigeonApiVideoDownloadManager, pigeonInstance: VideoDownloadManager, videoId: String) throws
   func resumeDownload(pigeonApi: PigeonApiVideoDownloadManager, pigeonInstance: VideoDownloadManager, videoId: String) throws
@@ -910,9 +910,10 @@ withIdentifier: pigeonIdentifierArg)
         let pigeonInstanceArg = args[0] as! VideoDownloadManager
         let videoIdArg = args[1] as! String
         let tokenArg = args[2] as! String
-        let encryptedArg = args[3] as! Bool
+        let titleArg = args[3] as! String
+        let encryptedArg = args[4] as! Bool
         do {
-          try api.pigeonDelegate.startDownload(pigeonApi: api, pigeonInstance: pigeonInstanceArg, videoId: videoIdArg, token: tokenArg, encrypted: encryptedArg)
+          try api.pigeonDelegate.startDownload(pigeonApi: api, pigeonInstance: pigeonInstanceArg, videoId: videoIdArg, token: tokenArg, title: titleArg, encrypted: encryptedArg)
           reply(wrapResult(nil))
         } catch {
           reply(wrapError(error))

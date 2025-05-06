@@ -120,6 +120,7 @@ class _HomePageState extends State<HomePage> {
                   downloadManager.startDownload(
                     videoId: '300852684',
                     token: '2mTL4Jw709nFbckRSbAqZ92nuYlhGz1otveAFJcn0s44aYPNeoK15TG5JtrxIFp-',
+                    title: '课程1',
                   );
                 },
               ),

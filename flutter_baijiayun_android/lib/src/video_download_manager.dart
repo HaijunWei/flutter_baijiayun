@@ -4,7 +4,7 @@ import 'package:flutter_baijiayun_platform_interface/flutter_baijiayun_platform_
 
 import 'baijiayun.g.dart';
 
-class IOSVideoDownloadManager extends PlatformVideoDownloadManager {
+class AndroidVideoDownloadManager extends PlatformVideoDownloadManager {
   late final _manager = VideoDownloadManager(onDownloadStateChagned: (_, player, info) {
     _eventController.sink.add(DownloadModel(
       videoId: info['videoId'] as String,
