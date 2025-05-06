@@ -43,17 +43,23 @@ class _HomePageState extends State<HomePage> {
 
   final videoKey = GlobalKey();
 
+  final downloadManager = VideoDownloadManager();
+
   @override
   void initState() {
     super.initState();
     controller.addListener(() {
-      print(controller.value);
+      // print(controller.value);
     });
     controller.setOnlineVideo(
       id: '300852684',
       token: '2mTL4Jw709nFbckRSbAqZ92nuYlhGz1otveAFJcn0s44aYPNeoK15TG5JtrxIFp-',
       position: const Duration(minutes: 60),
     );
+
+    downloadManager.stateChanged.listen((event) {
+      print(event);
+    });
   }
 
   void _setPreferredOrientation() {
@@ -106,6 +112,15 @@ class _HomePageState extends State<HomePage> {
                 child: Text('结束'),
                 onPressed: () {
                   controller.stop();
+                },
+              ),
+              CupertinoButton(
+                child: Text('下载'),
+                onPressed: () {
+                  downloadManager.startDownload(
+                    videoId: '300852684',
+                    token: '2mTL4Jw709nFbckRSbAqZ92nuYlhGz1otveAFJcn0s44aYPNeoK15TG5JtrxIFp-',
+                  );
                 },
               ),
               CupertinoButton(

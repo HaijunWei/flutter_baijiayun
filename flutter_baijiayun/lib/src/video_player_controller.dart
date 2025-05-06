@@ -131,10 +131,6 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
         if (_autoPlay) await play();
         if (_initialPosition != null) {
           seekTo(_initialPosition!.inSeconds);
-          // // 不增加点延迟，可能设置不成功
-          // Future.delayed(const Duration(milliseconds: 50), () {
-          //   if (!_isDisposed) seekTo(_initialPosition!.inSeconds);
-          // });
         }
         break;
       case VideoEventType.resolutionUpdate:

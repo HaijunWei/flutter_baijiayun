@@ -354,6 +354,9 @@ protocol BaijiayunPigeonProxyApiDelegate {
   /// An implementation of [PigeonApiVideoPlayer] used to add a new Dart instance of
   /// `VideoPlayer` to the Dart `InstanceManager` and make calls to Dart.
   func pigeonApiVideoPlayer(_ registrar: BaijiayunPigeonProxyApiRegistrar) -> PigeonApiVideoPlayer
+  /// An implementation of [PigeonApiVideoDownloadManager] used to add a new Dart instance of
+  /// `VideoDownloadManager` to the Dart `InstanceManager` and make calls to Dart.
+  func pigeonApiVideoDownloadManager(_ registrar: BaijiayunPigeonProxyApiRegistrar) -> PigeonApiVideoDownloadManager
 }
 
 open class BaijiayunPigeonProxyApiRegistrar {
@@ -396,10 +399,12 @@ open class BaijiayunPigeonProxyApiRegistrar {
   func setUp() {
     BaijiayunPigeonInstanceManagerApi.setUpMessageHandlers(binaryMessenger: binaryMessenger, instanceManager: instanceManager)
     PigeonApiVideoPlayer.setUpMessageHandlers(binaryMessenger: binaryMessenger, api: apiDelegate.pigeonApiVideoPlayer(self))
+    PigeonApiVideoDownloadManager.setUpMessageHandlers(binaryMessenger: binaryMessenger, api: apiDelegate.pigeonApiVideoDownloadManager(self))
   }
   func tearDown() {
     BaijiayunPigeonInstanceManagerApi.setUpMessageHandlers(binaryMessenger: binaryMessenger, instanceManager: nil)
     PigeonApiVideoPlayer.setUpMessageHandlers(binaryMessenger: binaryMessenger, api: nil)
+    PigeonApiVideoDownloadManager.setUpMessageHandlers(binaryMessenger: binaryMessenger, api: nil)
   }
 }
 private class BaijiayunPigeonInternalProxyApiCodecReaderWriter: FlutterStandardReaderWriter {
@@ -452,6 +457,17 @@ private class BaijiayunPigeonInternalProxyApiCodecReaderWriter: FlutterStandardR
       }
 
 
+      if let instance = value as? VideoDownloadManager {
+        pigeonRegistrar.apiDelegate.pigeonApiVideoDownloadManager(pigeonRegistrar).pigeonNewInstance(
+          pigeonInstance: instance
+        ) { _ in }
+        super.writeByte(128)
+        super.writeValue(
+          pigeonRegistrar.instanceManager.identifierWithStrongReference(forInstance: instance as AnyObject)!)
+        return
+      }
+
+
       if let instance = value as AnyObject?, pigeonRegistrar.instanceManager.containsInstance(instance)
       {
         super.writeByte(128)
@@ -483,6 +499,42 @@ enum VideoPlayerType: Int {
   case ijkPlayer = 1
 }
 
+/// Generated class from Pigeon that represents data sent in messages.
+struct DownloadItem {
+  var videoId: String
+  var title: String
+  var state: Int64
+  var totalSize: Int64
+  var progress: Double
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> DownloadItem? {
+    let videoId = pigeonVar_list[0] as! String
+    let title = pigeonVar_list[1] as! String
+    let state = pigeonVar_list[2] as! Int64
+    let totalSize = pigeonVar_list[3] as! Int64
+    let progress = pigeonVar_list[4] as! Double
+
+    return DownloadItem(
+      videoId: videoId,
+      title: title,
+      state: state,
+      totalSize: totalSize,
+      progress: progress
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      videoId,
+      title,
+      state,
+      totalSize,
+      progress,
+    ]
+  }
+}
+
 private class BaijiayunPigeonCodecReader: FlutterStandardReader {
   override func readValue(ofType type: UInt8) -> Any? {
     switch type {
@@ -492,6 +544,8 @@ private class BaijiayunPigeonCodecReader: FlutterStandardReader {
         return VideoPlayerType(rawValue: enumResultAsInt)
       }
       return nil
+    case 130:
+      return DownloadItem.fromList(self.readValue() as! [Any?])
     default:
       return super.readValue(ofType: type)
     }
@@ -503,6 +557,9 @@ private class BaijiayunPigeonCodecWriter: FlutterStandardWriter {
     if let value = value as? VideoPlayerType {
       super.writeByte(129)
       super.writeValue(value.rawValue)
+    } else if let value = value as? DownloadItem {
+      super.writeByte(130)
+      super.writeValue(value.toList())
     } else {
       super.writeValue(value)
     }
@@ -802,4 +859,194 @@ class BaijiayunApiSetup {
       setPrivateDomainPrefixChannel.setMessageHandler(nil)
     }
   }
+}
+protocol PigeonApiDelegateVideoDownloadManager {
+  func pigeonDefaultConstructor(pigeonApi: PigeonApiVideoDownloadManager) throws -> VideoDownloadManager
+  func startDownload(pigeonApi: PigeonApiVideoDownloadManager, pigeonInstance: VideoDownloadManager, videoId: String, token: String, encrypted: Bool) throws
+  func stopDownload(pigeonApi: PigeonApiVideoDownloadManager, pigeonInstance: VideoDownloadManager, videoId: String) throws
+  func pauseDownload(pigeonApi: PigeonApiVideoDownloadManager, pigeonInstance: VideoDownloadManager, videoId: String) throws
+  func resumeDownload(pigeonApi: PigeonApiVideoDownloadManager, pigeonInstance: VideoDownloadManager, videoId: String) throws
+  func getDownloadList(pigeonApi: PigeonApiVideoDownloadManager, pigeonInstance: VideoDownloadManager) throws -> [DownloadItem]
+}
+
+protocol PigeonApiProtocolVideoDownloadManager {
+  func onDownloadStateChagned(pigeonInstance pigeonInstanceArg: VideoDownloadManager, player playerArg: VideoDownloadManager, info infoArg: [AnyHashable?: Any?], completion: @escaping (Result<Void, PigeonError>) -> Void)
+}
+
+final class PigeonApiVideoDownloadManager: PigeonApiProtocolVideoDownloadManager  {
+  unowned let pigeonRegistrar: BaijiayunPigeonProxyApiRegistrar
+  let pigeonDelegate: PigeonApiDelegateVideoDownloadManager
+  init(pigeonRegistrar: BaijiayunPigeonProxyApiRegistrar, delegate: PigeonApiDelegateVideoDownloadManager) {
+    self.pigeonRegistrar = pigeonRegistrar
+    self.pigeonDelegate = delegate
+  }
+  static func setUpMessageHandlers(binaryMessenger: FlutterBinaryMessenger, api: PigeonApiVideoDownloadManager?) {
+    let codec: FlutterStandardMessageCodec =
+      api != nil
+      ? FlutterStandardMessageCodec(
+        readerWriter: BaijiayunPigeonInternalProxyApiCodecReaderWriter(pigeonRegistrar: api!.pigeonRegistrar))
+      : FlutterStandardMessageCodec.sharedInstance()
+    let pigeonDefaultConstructorChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flutter_baijiayun_ios.VideoDownloadManager.pigeon_defaultConstructor", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      pigeonDefaultConstructorChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let pigeonIdentifierArg = args[0] as! Int64
+        do {
+          api.pigeonRegistrar.instanceManager.addDartCreatedInstance(
+try api.pigeonDelegate.pigeonDefaultConstructor(pigeonApi: api),
+withIdentifier: pigeonIdentifierArg)
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      pigeonDefaultConstructorChannel.setMessageHandler(nil)
+    }
+    let startDownloadChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flutter_baijiayun_ios.VideoDownloadManager.startDownload", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      startDownloadChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let pigeonInstanceArg = args[0] as! VideoDownloadManager
+        let videoIdArg = args[1] as! String
+        let tokenArg = args[2] as! String
+        let encryptedArg = args[3] as! Bool
+        do {
+          try api.pigeonDelegate.startDownload(pigeonApi: api, pigeonInstance: pigeonInstanceArg, videoId: videoIdArg, token: tokenArg, encrypted: encryptedArg)
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      startDownloadChannel.setMessageHandler(nil)
+    }
+    let stopDownloadChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flutter_baijiayun_ios.VideoDownloadManager.stopDownload", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      stopDownloadChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let pigeonInstanceArg = args[0] as! VideoDownloadManager
+        let videoIdArg = args[1] as! String
+        do {
+          try api.pigeonDelegate.stopDownload(pigeonApi: api, pigeonInstance: pigeonInstanceArg, videoId: videoIdArg)
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      stopDownloadChannel.setMessageHandler(nil)
+    }
+    let pauseDownloadChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flutter_baijiayun_ios.VideoDownloadManager.pauseDownload", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      pauseDownloadChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let pigeonInstanceArg = args[0] as! VideoDownloadManager
+        let videoIdArg = args[1] as! String
+        do {
+          try api.pigeonDelegate.pauseDownload(pigeonApi: api, pigeonInstance: pigeonInstanceArg, videoId: videoIdArg)
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      pauseDownloadChannel.setMessageHandler(nil)
+    }
+    let resumeDownloadChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flutter_baijiayun_ios.VideoDownloadManager.resumeDownload", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      resumeDownloadChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let pigeonInstanceArg = args[0] as! VideoDownloadManager
+        let videoIdArg = args[1] as! String
+        do {
+          try api.pigeonDelegate.resumeDownload(pigeonApi: api, pigeonInstance: pigeonInstanceArg, videoId: videoIdArg)
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      resumeDownloadChannel.setMessageHandler(nil)
+    }
+    let getDownloadListChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flutter_baijiayun_ios.VideoDownloadManager.getDownloadList", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      getDownloadListChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let pigeonInstanceArg = args[0] as! VideoDownloadManager
+        do {
+          let result = try api.pigeonDelegate.getDownloadList(pigeonApi: api, pigeonInstance: pigeonInstanceArg)
+          reply(wrapResult(result))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      getDownloadListChannel.setMessageHandler(nil)
+    }
+  }
+
+  ///Creates a Dart instance of VideoDownloadManager and attaches it to [pigeonInstance].
+  func pigeonNewInstance(pigeonInstance: VideoDownloadManager, completion: @escaping (Result<Void, PigeonError>) -> Void) {
+    if pigeonRegistrar.ignoreCallsToDart {
+      completion(
+        .failure(
+          PigeonError(
+            code: "ignore-calls-error",
+            message: "Calls to Dart are being ignored.", details: "")))
+      return
+    }
+    if pigeonRegistrar.instanceManager.containsInstance(pigeonInstance as AnyObject) {
+      completion(.success(Void()))
+      return
+    }
+    let pigeonIdentifierArg = pigeonRegistrar.instanceManager.addHostCreatedInstance(pigeonInstance as AnyObject)
+    let binaryMessenger = pigeonRegistrar.binaryMessenger
+    let codec = pigeonRegistrar.codec
+    let channelName: String = "dev.flutter.pigeon.flutter_baijiayun_ios.VideoDownloadManager.pigeon_newInstance"
+    let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
+    channel.sendMessage([pigeonIdentifierArg] as [Any?]) { response in
+      guard let listResponse = response as? [Any?] else {
+        completion(.failure(createConnectionError(withChannelName: channelName)))
+        return
+      }
+      if listResponse.count > 1 {
+        let code: String = listResponse[0] as! String
+        let message: String? = nilOrValue(listResponse[1])
+        let details: String? = nilOrValue(listResponse[2])
+        completion(.failure(PigeonError(code: code, message: message, details: details)))
+      } else {
+        completion(.success(Void()))
+      }
+    }
+  }
+  func onDownloadStateChagned(pigeonInstance pigeonInstanceArg: VideoDownloadManager, player playerArg: VideoDownloadManager, info infoArg: [AnyHashable?: Any?], completion: @escaping (Result<Void, PigeonError>) -> Void)   {
+    if pigeonRegistrar.ignoreCallsToDart {
+      completion(
+        .failure(
+          PigeonError(
+            code: "ignore-calls-error",
+            message: "Calls to Dart are being ignored.", details: "")))
+      return
+    }
+    let binaryMessenger = pigeonRegistrar.binaryMessenger
+    let codec = pigeonRegistrar.codec
+    let channelName: String = "dev.flutter.pigeon.flutter_baijiayun_ios.VideoDownloadManager.onDownloadStateChagned"
+    let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
+    channel.sendMessage([pigeonInstanceArg, playerArg, infoArg] as [Any?]) { response in
+      guard let listResponse = response as? [Any?] else {
+        completion(.failure(createConnectionError(withChannelName: channelName)))
+        return
+      }
+      if listResponse.count > 1 {
+        let code: String = listResponse[0] as! String
+        let message: String? = nilOrValue(listResponse[1])
+        let details: String? = nilOrValue(listResponse[2])
+        completion(.failure(PigeonError(code: code, message: message, details: details)))
+      } else {
+        completion(.success(Void()))
+      }
+    }
+  }
+
 }
