@@ -505,6 +505,7 @@ struct DownloadItem {
   var title: String
   var state: Int64
   var totalSize: Int64
+  var speed: Int64
   var progress: Double
 
 
@@ -514,13 +515,15 @@ struct DownloadItem {
     let title = pigeonVar_list[1] as! String
     let state = pigeonVar_list[2] as! Int64
     let totalSize = pigeonVar_list[3] as! Int64
-    let progress = pigeonVar_list[4] as! Double
+    let speed = pigeonVar_list[4] as! Int64
+    let progress = pigeonVar_list[5] as! Double
 
     return DownloadItem(
       videoId: videoId,
       title: title,
       state: state,
       totalSize: totalSize,
+      speed: speed,
       progress: progress
     )
   }
@@ -530,6 +533,7 @@ struct DownloadItem {
       title,
       state,
       totalSize,
+      speed,
       progress,
     ]
   }

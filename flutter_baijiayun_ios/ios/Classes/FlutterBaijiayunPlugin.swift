@@ -302,6 +302,7 @@ class VideoDownloadManager: NSObject, BJLDownloadManagerDelegate, BJVRequestToke
                         title: item.playInfo?.title ?? "",
                         state: item.error != nil ? -1 : Int64(item.state.rawValue),
                         totalSize: item.totalSize,
+                        speed: item.bytesPerSecond,
                         progress: item.progress.fractionCompleted
                     )
                 }
@@ -387,6 +388,7 @@ class VideoDownloadManager: NSObject, BJLDownloadManagerDelegate, BJVRequestToke
             "title": task.userInfo?["title"] as? String ?? "",
             "state": task.error != nil ? -1 : Int64(task.state.rawValue),
             "progress": task.progress.fractionCompleted,
+            "speed": task.bytesPerSecond,
             "totalSize": task.totalSize,
         ]
         self.pigeonApi.onDownloadStateChagned(pigeonInstance: self, player: self, info: info) { _ in

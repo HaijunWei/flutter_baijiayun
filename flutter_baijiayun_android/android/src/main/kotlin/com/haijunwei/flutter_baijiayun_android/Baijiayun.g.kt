@@ -426,6 +426,7 @@ data class DownloadItem (
   val title: String,
   val state: Long,
   val totalSize: Long,
+  val speed: Long,
   val progress: Double
 )
  {
@@ -435,8 +436,9 @@ data class DownloadItem (
       val title = pigeonVar_list[1] as String
       val state = pigeonVar_list[2] as Long
       val totalSize = pigeonVar_list[3] as Long
-      val progress = pigeonVar_list[4] as Double
-      return DownloadItem(videoId, title, state, totalSize, progress)
+      val speed = pigeonVar_list[4] as Long
+      val progress = pigeonVar_list[5] as Double
+      return DownloadItem(videoId, title, state, totalSize, speed, progress)
     }
   }
   fun toList(): List<Any?> {
@@ -445,6 +447,7 @@ data class DownloadItem (
       title,
       state,
       totalSize,
+      speed,
       progress,
     )
   }

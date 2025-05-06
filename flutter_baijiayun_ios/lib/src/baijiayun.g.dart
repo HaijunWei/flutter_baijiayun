@@ -394,6 +394,7 @@ class DownloadItem {
     required this.title,
     required this.state,
     required this.totalSize,
+    required this.speed,
     required this.progress,
   });
 
@@ -405,6 +406,8 @@ class DownloadItem {
 
   int totalSize;
 
+  int speed;
+
   double progress;
 
   Object encode() {
@@ -413,6 +416,7 @@ class DownloadItem {
       title,
       state,
       totalSize,
+      speed,
       progress,
     ];
   }
@@ -424,7 +428,8 @@ class DownloadItem {
       title: result[1]! as String,
       state: result[2]! as int,
       totalSize: result[3]! as int,
-      progress: result[4]! as double,
+      speed: result[4]! as int,
+      progress: result[5]! as double,
     );
   }
 }

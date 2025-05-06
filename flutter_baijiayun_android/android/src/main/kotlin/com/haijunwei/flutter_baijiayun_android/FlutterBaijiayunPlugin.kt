@@ -374,6 +374,7 @@ class VideoDownloadManager(val flutterPluginBinding: FlutterPlugin.FlutterPlugin
         task.videoDownloadInfo.extraInfo,
         state.toLong(),
         task.totalLength,
+        task.speed,
         (task.progress / 100.0).toDouble(),
       )
     }
@@ -392,6 +393,7 @@ class VideoDownloadManager(val flutterPluginBinding: FlutterPlugin.FlutterPlugin
       "title" to (task.videoDownloadInfo.extraInfo ?: ""),
       "progress" to task.progress.toDouble(),
       "state" to state,
+      "speed" to task.speed,
       "totalSize" to task.totalLength
     )
     

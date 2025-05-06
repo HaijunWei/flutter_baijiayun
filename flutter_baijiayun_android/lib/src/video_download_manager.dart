@@ -11,6 +11,7 @@ class AndroidVideoDownloadManager extends PlatformVideoDownloadManager {
       title: info['title'] as String,
       progress: info['progress'] as double,
       totalSize: info['totalSize'] as int,
+      speed: info['speed'] as int,
       state: _mapState(info['state'] as int),
     ));
   });
@@ -50,6 +51,7 @@ class AndroidVideoDownloadManager extends PlatformVideoDownloadManager {
               title: e.title,
               progress: e.progress,
               totalSize: e.totalSize,
+              speed: 0,
               state: _mapState(e.state),
             ))
         .toList());

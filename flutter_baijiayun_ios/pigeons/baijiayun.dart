@@ -43,6 +43,7 @@ class DownloadItem {
   final String title;
   final int state;
   final int totalSize;
+  final int speed;
   final double progress;
 
   DownloadItem({
@@ -50,6 +51,7 @@ class DownloadItem {
     required this.title,
     required this.state,
     required this.totalSize,
+    required this.speed,
     required this.progress,
   });
 }
