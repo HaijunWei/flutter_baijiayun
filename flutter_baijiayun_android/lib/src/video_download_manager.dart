@@ -47,12 +47,12 @@ class AndroidVideoDownloadManager extends PlatformVideoDownloadManager {
   Future<List<DownloadModel>> getDownloadList() {
     return _manager.getDownloadList().then((value) => value
         .map((e) => DownloadModel(
-              videoId: e.videoId,
-              title: e.title,
-              progress: e.progress,
-              totalSize: e.totalSize,
-              speed: 0,
-              state: _mapState(e.state),
+              videoId: e['videoId'],
+              title: e['title'],
+              progress: e['progress'],
+              totalSize: e['totalSize'],
+              speed: e['speed'],
+              state: _mapState(e['state']),
             ))
         .toList());
   }

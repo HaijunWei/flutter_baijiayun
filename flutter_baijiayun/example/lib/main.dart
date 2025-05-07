@@ -116,12 +116,17 @@ class _HomePageState extends State<HomePage> {
               ),
               CupertinoButton(
                 child: Text('下载'),
-                onPressed: () {
-                  downloadManager.startDownload(
+                onPressed: () async {
+                  await downloadManager.startDownload(
                     videoId: '300852684',
                     token: '2mTL4Jw709nFbckRSbAqZ92nuYlhGz1otveAFJcn0s44aYPNeoK15TG5JtrxIFp-',
                     title: '课程1',
                   );
+                  Future.delayed(const Duration(seconds: 1), ()async {
+                    downloadManager.stopDownload('300852684');
+                  });
+                  // final manager1 = VideoDownloadManager();
+                 
                 },
               ),
               CupertinoButton(

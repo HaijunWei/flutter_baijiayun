@@ -38,25 +38,7 @@ abstract class VideoDownloadManager {
   void stopDownload(String videoId);
   void pauseDownload(String videoId);
   void resumeDownload(String videoId);
-  List<DownloadItem> getDownloadList();
+  List<Map> getDownloadList();
 
   late void Function(VideoDownloadManager player, Map info)? onDownloadStateChagned;
-}
-
-class DownloadItem {
-  final String videoId;
-  final String title;
-  final int state;
-  final int totalSize;
-  final int speed;
-  final double progress;
-
-  DownloadItem({
-    required this.videoId,
-    required this.title,
-    required this.state,
-    required this.totalSize,
-    required this.speed,
-    required this.progress,
-  });
 }

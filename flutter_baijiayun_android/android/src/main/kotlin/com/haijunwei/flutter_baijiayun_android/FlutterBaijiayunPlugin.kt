@@ -1,6 +1,7 @@
 package com.haijunwei.flutter_baijiayun_android
 
 import android.content.Context
+import android.util.Log
 import android.view.View
 import com.baijiahulian.common.networkv2.HttpException
 import com.baijiayun.BJYPlayerSDK
@@ -148,9 +149,18 @@ class VideoDownloadManagerApiDelegate(val flutterPluginBinding: FlutterPlugin.Fl
     pigeon_instance.resumeDownload(videoId)
   }
 
-  override fun getDownloadList(pigeon_instance: VideoDownloadManager): List<DownloadItem> {
+  override fun getDownloadList(pigeon_instance: VideoDownloadManager): List<Map<Any, Any?>> {
+    Log.i("Haijun1", "执行我了")
     return pigeon_instance.getDownloadList()
   }
+
+//  override fun getDownloadList(pigeon_instance: VideoDownloadManager): List<DownloadItem> {
+//    Log.i("Haijun1", "执行我了")
+//    return arrayListOf(
+//      DownloadItem("", "", 1, 1, 1, 0.1)
+//    )
+//    return pigeon_instance.getDownloadList()
+//  }
 }
 
 class VideoPlayerPlatformView(val context: Context): PlatformView {
@@ -329,6 +339,7 @@ class VideoDownloadManager(val flutterPluginBinding: FlutterPlugin.FlutterPlugin
             }
           })
           it.start()
+//          Log.i("Haijun1", manager.allTasks.toString())
         }
     
     downloadDisposables[videoId] = disposable
@@ -347,7 +358,6 @@ class VideoDownloadManager(val flutterPluginBinding: FlutterPlugin.FlutterPlugin
     stopExistingTask(videoId)
     val task = manager.getTaskByVideoId(videoId.toLong())
     if (task != null) {
-      task.cancel()
       manager.deleteTask(task)
     }
   }
@@ -360,8 +370,8 @@ class VideoDownloadManager(val flutterPluginBinding: FlutterPlugin.FlutterPlugin
     manager.getTaskByVideoId(videoId.toLong()).start()
   }
 
-  fun getDownloadList(): List<DownloadItem> {
-    val tasks = manager.allTasks ?: emptyList()
+  fun getDownloadList(): List<Map<Any, Any?>> {
+    val tasks = manager.allTasks ?: emptyList<DownloadTask>()
     return tasks.map { task ->
       val state = when (task.taskStatus) {
         TaskStatus.Downloading -> 0
@@ -369,13 +379,13 @@ class VideoDownloadManager(val flutterPluginBinding: FlutterPlugin.FlutterPlugin
         TaskStatus.Finish -> 2
         else -> -1
       }
-      DownloadItem(
-        task.videoDownloadInfo.videoId.toString(),
-        task.videoDownloadInfo.extraInfo,
-        state.toLong(),
-        task.totalLength,
-        task.speed,
-        (task.progress / 100.0).toDouble(),
+      mapOf<Any, Any>(
+        "videoId" to task.videoDownloadInfo.videoId.toString(),
+        "title" to task.videoDownloadInfo.extraInfo,
+        "progress" to (task.progress / 100.0).toDouble(),
+        "totalSize" to task.totalLength,
+        "speed" to task.speed,
+        "state" to state.toLong(),
       )
     }
   }

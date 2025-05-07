@@ -419,58 +419,12 @@ private class BaijiayunPigeonProxyApiBaseCodec(val registrar: BaijiayunPigeonPro
     }
   }
 }
-
-/** Generated class from Pigeon that represents data sent in messages. */
-data class DownloadItem (
-  val videoId: String,
-  val title: String,
-  val state: Long,
-  val totalSize: Long,
-  val speed: Long,
-  val progress: Double
-)
- {
-  companion object {
-    fun fromList(pigeonVar_list: List<Any?>): DownloadItem {
-      val videoId = pigeonVar_list[0] as String
-      val title = pigeonVar_list[1] as String
-      val state = pigeonVar_list[2] as Long
-      val totalSize = pigeonVar_list[3] as Long
-      val speed = pigeonVar_list[4] as Long
-      val progress = pigeonVar_list[5] as Double
-      return DownloadItem(videoId, title, state, totalSize, speed, progress)
-    }
-  }
-  fun toList(): List<Any?> {
-    return listOf(
-      videoId,
-      title,
-      state,
-      totalSize,
-      speed,
-      progress,
-    )
-  }
-}
 private open class BaijiayunPigeonCodec : StandardMessageCodec() {
   override fun readValueOfType(type: Byte, buffer: ByteBuffer): Any? {
-    return when (type) {
-      129.toByte() -> {
-        return (readValue(buffer) as? List<Any?>)?.let {
-          DownloadItem.fromList(it)
-        }
-      }
-      else -> super.readValueOfType(type, buffer)
-    }
+    return     super.readValueOfType(type, buffer)
   }
   override fun writeValue(stream: ByteArrayOutputStream, value: Any?)   {
-    when (value) {
-      is DownloadItem -> {
-        stream.write(129)
-        writeValue(stream, value.toList())
-      }
-      else -> super.writeValue(stream, value)
-    }
+    super.writeValue(stream, value)
   }
 }
 
@@ -789,7 +743,7 @@ abstract class PigeonApiVideoDownloadManager(open val pigeonRegistrar: Baijiayun
 
   abstract fun resumeDownload(pigeon_instance: VideoDownloadManager, videoId: String)
 
-  abstract fun getDownloadList(pigeon_instance: VideoDownloadManager): List<DownloadItem>
+  abstract fun getDownloadList(pigeon_instance: VideoDownloadManager): List<Map<Any, Any?>>
 
   companion object {
     @Suppress("LocalVariableName")

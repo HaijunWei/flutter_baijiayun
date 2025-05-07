@@ -383,52 +383,6 @@ class _PigeonInternalProxyApiBaseCodec extends _PigeonCodec {
 }
 
 
-class DownloadItem {
-  DownloadItem({
-    required this.videoId,
-    required this.title,
-    required this.state,
-    required this.totalSize,
-    required this.speed,
-    required this.progress,
-  });
-
-  String videoId;
-
-  String title;
-
-  int state;
-
-  int totalSize;
-
-  int speed;
-
-  double progress;
-
-  Object encode() {
-    return <Object?>[
-      videoId,
-      title,
-      state,
-      totalSize,
-      speed,
-      progress,
-    ];
-  }
-
-  static DownloadItem decode(Object result) {
-    result as List<Object?>;
-    return DownloadItem(
-      videoId: result[0]! as String,
-      title: result[1]! as String,
-      state: result[2]! as int,
-      totalSize: result[3]! as int,
-      speed: result[4]! as int,
-      progress: result[5]! as double,
-    );
-  }
-}
-
 
 class _PigeonCodec extends StandardMessageCodec {
   const _PigeonCodec();
@@ -437,9 +391,6 @@ class _PigeonCodec extends StandardMessageCodec {
     if (value is int) {
       buffer.putUint8(4);
       buffer.putInt64(value);
-    }    else if (value is DownloadItem) {
-      buffer.putUint8(129);
-      writeValue(buffer, value.encode());
     } else {
       super.writeValue(buffer, value);
     }
@@ -448,8 +399,6 @@ class _PigeonCodec extends StandardMessageCodec {
   @override
   Object? readValueOfType(int type, ReadBuffer buffer) {
     switch (type) {
-      case 129: 
-        return DownloadItem.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);
     }
@@ -1194,7 +1143,7 @@ class VideoDownloadManager extends PigeonInternalProxyApiBaseClass {
     }
   }
 
-  Future<List<DownloadItem>> getDownloadList() async {
+  Future<List<Map>> getDownloadList() async {
     final _PigeonInternalProxyApiBaseCodec pigeonChannelCodec =
         _pigeonVar_codecVideoDownloadManager;
     final BinaryMessenger? pigeonVar_binaryMessenger = pigeon_binaryMessenger;
@@ -1222,7 +1171,7 @@ class VideoDownloadManager extends PigeonInternalProxyApiBaseClass {
         message: 'Host platform returned null value for non-null return value.',
       );
     } else {
-      return (pigeonVar_replyList[0] as List<Object?>?)!.cast<DownloadItem>();
+      return (pigeonVar_replyList[0] as List<Object?>?)!.cast<Map>();
     }
   }
 
