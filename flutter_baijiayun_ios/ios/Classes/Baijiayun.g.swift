@@ -499,46 +499,6 @@ enum VideoPlayerType: Int {
   case ijkPlayer = 1
 }
 
-/// Generated class from Pigeon that represents data sent in messages.
-struct DownloadItem {
-  var videoId: String
-  var title: String
-  var state: Int64
-  var totalSize: Int64
-  var speed: Int64
-  var progress: Double
-
-
-  // swift-format-ignore: AlwaysUseLowerCamelCase
-  static func fromList(_ pigeonVar_list: [Any?]) -> DownloadItem? {
-    let videoId = pigeonVar_list[0] as! String
-    let title = pigeonVar_list[1] as! String
-    let state = pigeonVar_list[2] as! Int64
-    let totalSize = pigeonVar_list[3] as! Int64
-    let speed = pigeonVar_list[4] as! Int64
-    let progress = pigeonVar_list[5] as! Double
-
-    return DownloadItem(
-      videoId: videoId,
-      title: title,
-      state: state,
-      totalSize: totalSize,
-      speed: speed,
-      progress: progress
-    )
-  }
-  func toList() -> [Any?] {
-    return [
-      videoId,
-      title,
-      state,
-      totalSize,
-      speed,
-      progress,
-    ]
-  }
-}
-
 private class BaijiayunPigeonCodecReader: FlutterStandardReader {
   override func readValue(ofType type: UInt8) -> Any? {
     switch type {
@@ -548,8 +508,6 @@ private class BaijiayunPigeonCodecReader: FlutterStandardReader {
         return VideoPlayerType(rawValue: enumResultAsInt)
       }
       return nil
-    case 130:
-      return DownloadItem.fromList(self.readValue() as! [Any?])
     default:
       return super.readValue(ofType: type)
     }
@@ -561,9 +519,6 @@ private class BaijiayunPigeonCodecWriter: FlutterStandardWriter {
     if let value = value as? VideoPlayerType {
       super.writeByte(129)
       super.writeValue(value.rawValue)
-    } else if let value = value as? DownloadItem {
-      super.writeByte(130)
-      super.writeValue(value.toList())
     } else {
       super.writeValue(value)
     }
@@ -870,7 +825,7 @@ protocol PigeonApiDelegateVideoDownloadManager {
   func stopDownload(pigeonApi: PigeonApiVideoDownloadManager, pigeonInstance: VideoDownloadManager, videoId: String) throws
   func pauseDownload(pigeonApi: PigeonApiVideoDownloadManager, pigeonInstance: VideoDownloadManager, videoId: String) throws
   func resumeDownload(pigeonApi: PigeonApiVideoDownloadManager, pigeonInstance: VideoDownloadManager, videoId: String) throws
-  func getDownloadList(pigeonApi: PigeonApiVideoDownloadManager, pigeonInstance: VideoDownloadManager) throws -> [DownloadItem]
+  func getDownloadList(pigeonApi: PigeonApiVideoDownloadManager, pigeonInstance: VideoDownloadManager) throws -> [[AnyHashable?: Any?]]
 }
 
 protocol PigeonApiProtocolVideoDownloadManager {

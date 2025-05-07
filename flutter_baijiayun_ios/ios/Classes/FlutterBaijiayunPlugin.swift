@@ -73,7 +73,7 @@ class VideoDownloadManagerApiDelegate: PigeonApiDelegateVideoDownloadManager {
         pigeonInstance.resumeDownload(videoId: videoId)
     }
 
-    func getDownloadList(pigeonApi _: PigeonApiVideoDownloadManager, pigeonInstance: VideoDownloadManager) throws -> [DownloadItem] {
+    func getDownloadList(pigeonApi: PigeonApiVideoDownloadManager, pigeonInstance: VideoDownloadManager) throws -> [[AnyHashable? : Any?]] {
         pigeonInstance.getDownloadList()
     }
 }
@@ -292,19 +292,19 @@ class VideoDownloadManager: NSObject, BJLDownloadManagerDelegate, BJVRequestToke
         launchTimerIf()
     }
 
-    func getDownloadList() -> [DownloadItem] {
+    func getDownloadList() -> [[AnyHashable? : Any?]] {
         return manager.downloadItems
             .map { $0 as? BJVDownloadItem }
             .compactMap {
                 if let item = $0 {
-                    return DownloadItem(
-                        videoId: item.videoID ?? "",
-                        title: item.playInfo?.title ?? "",
-                        state: item.error != nil ? -1 : Int64(item.state.rawValue),
-                        totalSize: item.totalSize,
-                        speed: item.bytesPerSecond,
-                        progress: item.progress.fractionCompleted
-                    )
+                    return [
+                        "videoId": item.videoID ?? "",
+                        "title": item.playInfo?.title ?? "",
+                        "state": item.error != nil ? -1 : Int64(item.state.rawValue),
+                        "totalSize": item.totalSize,
+                        "speed": item.bytesPerSecond,
+                        "progress": item.progress.fractionCompleted
+                    ]
                 }
                 return nil
             }
