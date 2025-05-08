@@ -58,7 +58,7 @@ android {
     }
 
     dependencies {
-        implementation'com.baijia.player:VideoplayerCore:3.19.3'
+        implementation'com.baijia.player:VideoplayerCore:4.17.0'
 
         testImplementation("org.jetbrains.kotlin:kotlin-test")
         testImplementation("org.mockito:mockito-core:5.0.0")

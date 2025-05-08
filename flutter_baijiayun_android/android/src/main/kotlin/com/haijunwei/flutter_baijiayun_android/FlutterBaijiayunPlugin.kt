@@ -3,12 +3,12 @@ package com.haijunwei.flutter_baijiayun_android
 import android.content.Context
 import android.util.Log
 import android.view.View
-import com.baijiahulian.common.networkv2.HttpException
 import com.baijiayun.BJYPlayerSDK
 import com.baijiayun.download.DownloadListener
 import com.baijiayun.download.DownloadManager
 import com.baijiayun.download.DownloadTask
 import com.baijiayun.download.constant.TaskStatus
+import com.baijiayun.network.HttpException
 import com.baijiayun.videoplayer.IBJYVideoPlayer
 import com.baijiayun.videoplayer.VideoPlayerFactory
 import com.baijiayun.videoplayer.listeners.OnBufferedUpdateListener
@@ -150,17 +150,8 @@ class VideoDownloadManagerApiDelegate(val flutterPluginBinding: FlutterPlugin.Fl
   }
 
   override fun getDownloadList(pigeon_instance: VideoDownloadManager): List<Map<Any, Any?>> {
-    Log.i("Haijun1", "执行我了")
     return pigeon_instance.getDownloadList()
   }
-
-//  override fun getDownloadList(pigeon_instance: VideoDownloadManager): List<DownloadItem> {
-//    Log.i("Haijun1", "执行我了")
-//    return arrayListOf(
-//      DownloadItem("", "", 1, 1, 1, 0.1)
-//    )
-//    return pigeon_instance.getDownloadList()
-//  }
 }
 
 class VideoPlayerPlatformView(val context: Context): PlatformView {
@@ -304,7 +295,7 @@ class VideoDownloadManager(val flutterPluginBinding: FlutterPlugin.FlutterPlugin
     val task = manager.getTaskByVideoId(videoId.toLong())
     if (task != null) {
       task.cancel()
-      manager.deleteTask(task)
+      manager.allTasks.remove(task)
     }
 
     val disposable = manager.newVideoDownloadTask("video", videoId.toLong(), token, title)
@@ -319,7 +310,6 @@ class VideoDownloadManager(val flutterPluginBinding: FlutterPlugin.FlutterPlugin
               downloadDisposables.remove(videoId)
               p0?.let { task -> sendEvent(task) }
             }
-
             override fun onPaused(p0: DownloadTask?) {
               p0?.let { task -> sendEvent(task) }
             }
@@ -339,7 +329,6 @@ class VideoDownloadManager(val flutterPluginBinding: FlutterPlugin.FlutterPlugin
             }
           })
           it.start()
-//          Log.i("Haijun1", manager.allTasks.toString())
         }
     
     downloadDisposables[videoId] = disposable
@@ -358,7 +347,8 @@ class VideoDownloadManager(val flutterPluginBinding: FlutterPlugin.FlutterPlugin
     stopExistingTask(videoId)
     val task = manager.getTaskByVideoId(videoId.toLong())
     if (task != null) {
-      manager.deleteTask(task)
+      task.cancel()
+      manager.allTasks.remove(task)
     }
   }
 
