@@ -65,7 +65,6 @@ class FlutterViewFactory(val instanceManager: BaijiayunPigeonInstanceManager): P
     val identifier = (args as Int).toLong()
     val instance = instanceManager.getInstance<VideoPlayer>(identifier)
     if (instance is VideoPlayer) {
-      instance.createPlayerView(context!!)
       return instance.platformView!!
     }
     throw IllegalStateException("Unable to find a PlatformView or View instance: $args, $instance")
@@ -181,6 +180,8 @@ class VideoPlayer(val flutterPluginBinding: FlutterPlugin.FlutterPluginBinding, 
       .setContext(flutterPluginBinding.applicationContext)
       .setSupportBreakPointPlay(false)
       .build()
+    platformView = VideoPlayerPlatformView(flutterPluginBinding.applicationContext)
+    player.bindPlayerView(platformView!!.playerView)
     player.setAutoPlay(false)
 
     player.addOnPlayerStatusChangeListener(object: OnPlayerStatusChangeListener {
@@ -230,11 +231,6 @@ class VideoPlayer(val flutterPluginBinding: FlutterPlugin.FlutterPluginBinding, 
         ))
       }
     })
-  }
-
-  fun createPlayerView(context: Context) {
-    platformView = VideoPlayerPlatformView(context)
-    player.bindPlayerView(platformView!!.playerView)
   }
 
   private fun sendEvent(event: Map<Any, Any?>) {
