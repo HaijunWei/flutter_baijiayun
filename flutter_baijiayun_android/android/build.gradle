@@ -14,13 +14,13 @@ buildscript {
     }
 }
 
-allprojects {
+rootProject.allprojects {
     repositories {
-        maven { url 'https://git2.baijiashilian.com/open-android/maven/raw/master/' }
-        maven {
-            allowInsecureProtocol true
-            url 'http://nexus.baijiayun.com/nexus/content/groups/android-public/'
-        }
+        // maven { url 'https://git2.baijiashilian.com/open-android/maven/raw/master/' }
+        // maven {
+        //     allowInsecureProtocol true
+        //     url 'http://nexus.baijiayun.com/nexus/content/groups/android-public/'
+        // }
         maven { url 'https://maven.aliyun.com/nexus/content/groups/public/' }
         maven { url 'https://jitpack.io' }
         mavenCentral()

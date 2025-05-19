@@ -1,6 +1,6 @@
 allprojects {
     repositories {
-         maven { url 'https://git2.baijiashilian.com/open-android/maven/raw/master/' }
+        maven { url 'https://git2.baijiashilian.com/open-android/maven/raw/master/' }
         maven {
             allowInsecureProtocol true
             url 'http://nexus.baijiayun.com/nexus/content/groups/android-public/'

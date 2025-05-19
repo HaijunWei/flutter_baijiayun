@@ -204,19 +204,28 @@ class VideoPlayer {
         pigeonApi.onEvent(pigeonInstance: self, player: self, event: event) { _ in
         }
     }
+    
+    private func setVideo(id: String, token: String) {
+        let cacheManager = BJVDownloadManager(identifier: "user.identifier")
+        if  let downloadItem = cacheManager.downloadItem(withVideoID: id), downloadItem.state == .completed {
+            manager.setupLocalVideo(with: downloadItem)
+        } else {
+            manager.setupOnlineVideo(withID: id, token: token)
+        }
+    }
 
     // MARK: -
 
     func setOnlineVideo(id: String, token: String) {
         videoId = id
         videoToken = token
-        manager.setupOnlineVideo(withID: id, token: token)
+        setVideo(id: id, token: token)
     }
 
     func play() {
         if isStop {
             if let videoId, let videoToken {
-                setOnlineVideo(id: videoId, token: videoToken)
+                setVideo(id: videoId, token: videoToken)
             }
         } else {
             manager.play()

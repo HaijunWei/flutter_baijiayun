@@ -244,7 +244,16 @@ class VideoPlayer(val flutterPluginBinding: FlutterPlugin.FlutterPluginBinding, 
   }
 
   fun setOnlineVideo(id: Long, token: String) {
-    player.setupOnlineVideoWithId(id, token)
+    val cacheManager = DownloadManager.getInstance(flutterPluginBinding.applicationContext)
+    cacheManager.targetFolder = flutterPluginBinding.applicationContext.getExternalFilesDir(null)!!.absolutePath + "/bjy_video_downloaded/"
+    cacheManager.loadDownloadInfo();
+    val task = cacheManager.getTaskByVideoId(id)
+    val model = task?.videoDownloadInfo
+    if (model != null && task.taskStatus == TaskStatus.Finish) {
+      player.setupLocalVideoWithDownloadModel(model)
+    } else {
+      player.setupOnlineVideoWithId(id, token)
+    }
   }
 
   fun play() {
